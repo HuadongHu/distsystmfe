@@ -61,7 +61,7 @@
     <link rel="shortcut icon" href="gitbook/images/favicon.ico" type="image/x-icon">
 
     
-    <link rel="next" href="2.-lamport-diagramshappensbefore-tong-bu-wang-luo-yu-yi-bu-wang-luo-pian-xu-guan-xi.html" />
+    <link rel="next" href="lamport-diagrams-happensbefore-partial-order.html" />
     
     
     <link rel="prev" href="./" />
@@ -119,9 +119,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.3" data-path="2.-lamport-diagramshappensbefore-tong-bu-wang-luo-yu-yi-bu-wang-luo-pian-xu-guan-xi.html">
+        <li class="chapter " data-level="1.3" data-path="lamport-diagrams-happensbefore-partial-order.html">
             
-                <a href="2.-lamport-diagramshappensbefore-tong-bu-wang-luo-yu-yi-bu-wang-luo-pian-xu-guan-xi.html">
+                <a href="lamport-diagrams-happensbefore-partial-order.html">
             
                     
                     2. Lamport Diagrams，Happens-before，同步网络与异步网络，偏序关系
@@ -132,9 +132,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.4" data-path="3.recap-of-partial-orders-total-orders-recap-of-happens-before-lamport-clocks.html">
+        <li class="chapter " data-level="1.4" data-path="lamport-clocks.html">
             
-                <a href="3.recap-of-partial-orders-total-orders-recap-of-happens-before-lamport-clocks.html">
+                <a href="lamport-clocks.html">
             
                     
                     3. Lamport时钟(Lamport clocks)
@@ -246,7 +246,7 @@
 <p>&#x5355;&#x8C03;&#x65F6;&#x949F;(Monotonic clock)&#x3002;&#x5355;&#x8C03;&#x65F6;&#x949F;&#x53EA;&#x5F80;&#x524D;&#x8D70;&#x4E0D;&#x5F80;&#x540E;&#xFF0C;&#x6BD4;&#x5982;&#x7CFB;&#x7EDF;&#x5F00;&#x673A;&#x540E;&#x7ECF;&#x8FC7;&#x4E86;&#x591A;&#x957F;&#x65F6;&#x95F4;&#x5C31;&#x662F;&#x4E2A;&#x5355;&#x8C03;&#x65F6;&#x949F;&#xFF0C; UNIX&#x65F6;&#x95F4;&#x6233;(Time Stamp)&#x4E5F;&#x662F;&#x5355;&#x8C03;&#x65F6;&#x949F;&#x3002;&#x5355;&#x8C03;&#x65F6;&#x949F;&#x5F88;&#x9002;&#x5408;&#x7528;&#x4E8E;&#x8868;&#x793A;&#x65F6;&#x95F4;&#x6BB5;&#x6216;&#x8005;&#x95F4;&#x9694;&#xFF0C;&#x4F46;&#x662F;&#x4E0D;&#x9002;&#x5408;&#x6807;&#x5B9A;&#x65F6;&#x95F4;&#x3002;</p>
 <p>&#x5173;&#x4E8E;&#x975E;&#x5355;&#x8C03;&#x65F6;&#x949F;&#x7684;&#x95EE;&#x9898;&#xFF0C;&#x611F;&#x5174;&#x8DA3;&#x7684;&#x540C;&#x5B66;&#x53EF;&#x4EE5;&#x9605;&#x8BFB;CloudFare&#x56E0;&#x4E3A;&#x975E;&#x5355;&#x8C03;&#x65F6;&#x949F;&#x5BFC;&#x81F4;&#x7684;&#x4E00;&#x6B21;&#x6545;&#x969C;&#xFF1A;<a href="https://blog.cloudflare.com/how-and-why-the-leap-second-affected-cloudflare-dns/" target="_blank">https://blog.cloudflare.com/how-and-why-the-leap-second-affected-cloudflare-dns/</a></p>
 <p>&#x4E0A;&#x8FF0;&#x7684;&#x4E24;&#x79CD;&#x65F6;&#x949F;&#x90FD;&#x662F;&#x7269;&#x7406;&#x65F6;&#x949F;&#xFF0C;&#x5728;&#x5206;&#x5E03;&#x5F0F;&#x7CFB;&#x7EDF;&#x4E2D;&#xFF0C;&#x6211;&#x4EEC;&#x9700;&#x8981;&#x4E00;&#x79CD;&#x65B0;&#x7684;&#x65F6;&#x949F;&#xFF0C;&#x903B;&#x8F91;&#x65F6;&#x949F;&#x3002;</p>
-<p>&#x903B;&#x8F91;&#x65F6;&#x949F;&#x4EC5;&#x4EC5;&#x7528;&#x6765;&#x6807;&#x6CE8;&#x65F6;&#x95F4;&#x7684;&#x53D1;&#x751F;&#x987A;&#x5E8F;&#xFF0C;&#x65F6;&#x5E8F;&#x3002;&#x5BF9;&#x4E8E;&#x65F6;&#x5E8F;&#x95EE;&#x9898;&#xFF0C;&#x6700;&#x57FA;&#x672C;&#x7684;&#x8BA8;&#x8BBA;&#x70B9;&#x5C31;&#x662F;&#x54EA;&#x4E2A;&#x4E8B;&#x4EF6;&#x5148;&#x53D1;&#x751F;&#x7684;&#x3002;</p>
+<p>&#x903B;&#x8F91;&#x65F6;&#x949F;&#x4EC5;&#x4EC5;&#x7528;&#x6765;&#x6807;&#x6CE8;&#x4E8B;&#x4EF6;&#x7684;&#x53D1;&#x751F;&#x987A;&#x5E8F;&#xFF0C;&#x6700;&#x57FA;&#x672C;&#x7684;&#x8BA8;&#x8BBA;&#x70B9;&#x5C31;&#x662F;&#x54EA;&#x4E2A;&#x4E8B;&#x4EF6;&#x5148;&#x53D1;&#x751F;&#x7684;&#x3002;</p>
 <p>&#x6BD4;&#x5982;&#x8BF4;&#xFF0C;M1&#x673A;&#x5668;&#x9700;&#x8981;&#x4ECE;M2&#x8BFB;X&#xFF0C; M3&#x9700;&#x8981;&#x4FEE;&#x6539;M2&#x7684;X&#xFF0C;&#x90A3;&#x6211;&#x4EEC;&#x5C31;&#x5F88;&#x6709;&#x5FC5;&#x8981;&#x641E;&#x6E05;&#x695A;&#x54EA;&#x4E2A;&#x4E8B;&#x4EF6;&#x5148;&#x53D1;&#x751F;&#x7684;&#x3002;</p>
 <p><img src="https://files.huadonghu.com/20200521/09yo9A.jpg" alt=""></p>
 <p>&#x6765;&#x601D;&#x8003;&#x4E00;&#x4E2A;&#x903B;&#x8F91;&#x95EE;&#x9898;&#xFF0C; &#x5982;&#x679C;A&#x65E9;&#x4E8E;B&#x53D1;&#x751F;&#xFF0C;&#x90A3;&#x6211;&#x4EEC;&#x53EF;&#x4EE5;&#x63A8;&#x51FA;&#x4EC0;&#x4E48;&#x6837;&#x7684;&#x56E0;&#x679C;&#x5173;&#x7CFB;&#xFF1F;</p>
@@ -287,7 +287,7 @@
                 </a>
                 
                 
-                <a href="2.-lamport-diagramshappensbefore-tong-bu-wang-luo-yu-yi-bu-wang-luo-pian-xu-guan-xi.html" class="navigation navigation-next " aria-label="Next page: 2. Lamport Diagrams，Happens-before，同步网络与异步网络，偏序关系">
+                <a href="lamport-diagrams-happensbefore-partial-order.html" class="navigation navigation-next " aria-label="Next page: 2. Lamport Diagrams，Happens-before，同步网络与异步网络，偏序关系">
                     <i class="fa fa-angle-right"></i>
                 </a>
                 
@@ -298,7 +298,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"1. 什么是和为什么分布式系统？时间和时钟。","level":"1.2","depth":1,"next":{"title":"2. Lamport Diagrams，Happens-before，同步网络与异步网络，偏序关系","level":"1.3","depth":1,"path":"2.-lamport-diagramshappensbefore-tong-bu-wang-luo-yu-yi-bu-wang-luo-pian-xu-guan-xi.md","ref":"2.-lamport-diagramshappensbefore-tong-bu-wang-luo-yu-yi-bu-wang-luo-pian-xu-guan-xi.md","articles":[]},"previous":{"title":"📚分布式系统(Distributed Systems)","level":"1.1","depth":1,"path":"README.md","ref":"README.md","articles":[]},"dir":"ltr"},"config":{"plugins":["disqus","ga"],"root":".","styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"pluginsConfig":{"disqus":{"useIdentifier":false,"shortName":"distributed-system"},"ga":{"configuration":"auto","token":"UA-131378726-6"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"theme":"default","author":"Huadong Hu","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"title":"分布式系统","language":"zh-hans","gitbook":"*","description":"分布式系统概述"},"file":{"path":"distributed-systems-what-and-why-time-and-clocks.md","mtime":"2020-05-23T03:11:07.503Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-05-23T03:26:38.770Z"},"basePath":".","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"1. 什么是和为什么分布式系统？时间和时钟。","level":"1.2","depth":1,"next":{"title":"2. Lamport Diagrams，Happens-before，同步网络与异步网络，偏序关系","level":"1.3","depth":1,"path":"lamport-diagrams-happensbefore-partial-order.md","ref":"lamport-diagrams-happensbefore-partial-order.md","articles":[]},"previous":{"title":"📚分布式系统(Distributed Systems)","level":"1.1","depth":1,"path":"README.md","ref":"README.md","articles":[]},"dir":"ltr"},"config":{"plugins":["disqus","ga"],"root":".","styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"pluginsConfig":{"disqus":{"useIdentifier":false,"shortName":"distributed-system"},"ga":{"configuration":"auto","token":"UA-131378726-6"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"theme":"default","author":"Huadong Hu","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"title":"分布式系统","language":"zh-hans","gitbook":"*","description":"分布式系统概述"},"file":{"path":"distributed-systems-what-and-why-time-and-clocks.md","mtime":"2020-05-23T03:33:37.723Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-05-23T03:33:52.665Z"},"basePath":".","book":{"language":""}});
         });
     </script>
 </div>
