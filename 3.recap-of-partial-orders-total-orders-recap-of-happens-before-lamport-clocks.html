@@ -189,44 +189,59 @@
                                 <section class="normal markdown-section">
                                 
                                 <h1 id="3-lamport&#x65F6;&#x949F;lamport-clocks">3. Lamport&#x65F6;&#x949F;(Lamport clocks)</h1>
-<p>&#x6211;&#x4EEC;&#x4E4B;&#x524D;&#x8C08;&#x5230;&#xFF0C;&#x6211;&#x4EEC;&#x9700;&#x8981;&#x4E00;&#x79CD;&#x4EC5;&#x4EC5;&#x7528;&#x6765;&#x6807;&#x6CE8;&#x65F6;&#x95F4;&#x7684;&#x53D1;&#x751F;&#x987A;&#x5E8F;&#x7684;&#x903B;&#x8F91;&#x65F6;&#x949F;&#xFF0C;&#x8FD9;&#x79CD;&#x65F6;&#x949F;&#x4E0D;&#x4F1A;&#x544A;&#x8BC9;&#x6211;&#x4EEC;&#x73B0;&#x5728;&#x662F;&#x51E0;&#x70B9;&#x949F;&#x4E86;&#xFF0C;&#x4E5F;&#x4E0D;&#x4F1A;&#x544A;&#x8BC9;&#x6211;&#x4EEC;&#x8FC7;&#x53BB;&#x4E86;&#x591A;&#x957F;&#x65F6;&#x95F4;&#x3002; Lambert clock&#x3002;</p>
-<p> Lambert clock&#x5176;&#x5B9E;&#x662F;&#x4E00;&#x79CD;&#x7ED9;&#x4E8B;&#x4EF6;&#x5206;&#x914D;&#x6570;&#x5B57;&#x7684;&#x65B9;&#x5F0F;&#xFF0C;&#x4F7F;&#x5F97;&#x5982;&#x679C;&#x4E8B;&#x4EF6;A&#x65E9;&#x4E8E;&#x4E8B;&#x4EF6;B&#x53D1;&#x751F;&#xFF0C;&#x90A3;&#x4E48;A&#x7684; Lambert clock&#xFF0C;&#x7B80;&#x79F0;LC&#xFF0C;&#x5C0F;&#x4E8E;&#x4E8B;&#x4EF6;B&#x7684;LC&#x3002;LC(A) &lt; LC(B)&#x3002;</p>
-<p>&#x6240;&#x4EE5;&#x6211;&#x4EEC;&#x8BF4; Lambert clock&#x662F;&#x548C;&#x56E0;&#x679C;&#x5173;&#x7CFB;&#x4FDD;&#x6301;&#x4E00;&#x81F4;&#x7684;&#xFF0C;&#x5982;&#x679C;&#x4E8B;&#x4EF6;A&#x65E9;&#x4E8E;&#x4E8B;&#x4EF6;B&#xFF0C;&#x5219;LC(A) &lt; LC(B)&#x3002;</p>
-<p>&#x4E0B;&#x9762;&#x662F;&#x7B97;&#x6CD5;&#x7684;&#x5177;&#x4F53;&#x8FC7;&#x7A0B;</p>
-<ol>
-<li>&#x9996;&#x5148;&#xFF0C;&#x6BCF;&#x4E2A;&#x8FDB;&#x7A0B;&#x90FD;&#x521D;&#x59CB;&#x5316;&#x8BA1;&#x6570;&#x5668;(Counter)&#x4E3A;0&#x3002;</li>
-<li>&#x6BCF;&#x4E2A;&#x8FDB;&#x7A0B;&#x5185;&#xFF0C;&#x4E8B;&#x4EF6;&#x53D1;&#x751F;&#x5219;&#x5C06;&#x8BA1;&#x6570;&#x5668;+1&#x3002;</li>
-<li>&#x5982;&#x679C;&#x53D1;&#x751F;&#x6D88;&#x606F;&#x53D1;&#x9001;&#x4E8B;&#x4EF6;&#xFF0C;&#x5219;&#x5C06;&#x5176;&#x8BA1;&#x6570;&#x5668;&#x643A;&#x5E26;&#x4E0A;&#x3002;</li>
-<li>&#x5982;&#x679C;&#x662F;&#x6D88;&#x606F;&#x63A5;&#x6536;&#x4E8B;&#x4EF6;&#xFF0C;&#x5219;max(&#x672C;&#x5730;&#x8BA1;&#x6570;&#x5668;+1, &#x7F51;&#x7EDC;&#x643A;&#x5E26;&#x7684;&#x8BA1;&#x6570;&#x5668;)&#x3002;</li>
-</ol>
-<p>&#x5176;&#x5B9E;&#x5F88;&#x7B80;&#x5355;&#x7684;&#x8FC7;&#x7A0B;&#xFF0C;&#x4F60;&#x53EF;&#x4EE5;&#x8BD5;&#x7740;&#x8BA1;&#x7B97;&#x4E0B;&#x4E0B;&#x9762;&#x7684;&#x4F8B;&#x5B50;</p>
-<p><img src="https://files.huadonghu.com/20200522/2gMNG1.png" alt=""></p>
-<p>&#x7B54;&#x6848;</p>
-<p><img src="https://files.huadonghu.com/20200522/5Ki7eT.png" alt=""></p>
-<p>&#x90A3;&#x601D;&#x8003;&#x4E00;&#x4E2A;&#x95EE;&#x9898;&#xFF0C;&#x5982;&#x679C;LC(A) &lt; LC(B)&#xFF0C;&#x90A3;&#x4E48;&#x53EF;&#x4EE5;&#x63A8;&#x65AD;&#x51FA;&#x4E8B;&#x4EF6;A happens before B&#x4E48;&#xFF1F;</p>
-<p>&#x7B54;&#x6848;&#x662F;&#x5426;&#x5B9A;&#x7684;&#x3002;</p>
-<p>&#x6211;&#x4EEC;&#x6765;&#x770B;&#x53E6;&#x4E00;&#x4E2A;&#x4F8B;&#x5B50;&#x3002;&#x4F60;&#x53EF;&#x4EE5;&#x518D;&#x8BD5;&#x7740;&#x8BA1;&#x7B97;&#x4E0B;&#x4E0B;&#x9762;&#x7684;&#x4F8B;&#x5B50;&#x4E2D;&#x4E8B;&#x4EF6;A&#x548C;&#x4E8B;&#x4EF6;B&#x7684;LC&#x5206;&#x522B;&#x662F;&#x591A;&#x5C11;&#x3002;</p>
-<p><img src="https://files.huadonghu.com/20200522/ylyLwA.png" alt=""></p>
-<p>OK&#xFF0C;&#x76F8;&#x4FE1;&#x4F60;&#x5DF2;&#x7ECF;&#x8BA1;&#x7B97;&#x597D;&#x4E86;&#x3002;</p>
-<p><img src="https://files.huadonghu.com/20200522/BXZPGy.png" alt=""></p>
-<p>&#x6211;&#x4EEC;&#x53D1;&#x73B0;&#xFF0C;LC(A) = 1, LC(B) = 5&#xFF0C;LC(A) &lt; LC(B)&#xFF0C;&#x90A3;A&#x4E8B;&#x4EF6; happens before B&#x4E8B;&#x4EF6;&#x4E48;&#xFF1F;NO&#x3002;</p>
-<p>&#x6839;&#x636E;&#x4E4B;&#x524D;&#x8BB2;&#x8FC7;&#x7684;Happens-before&#x7684;&#x5B9A;&#x4E49;&#xFF1A;</p>
-<ol>
-<li>A&#x548C;B&#x5728;&#x540C;&#x4E00;&#x4E2A;&#x8FDB;&#x7A0B;&#x7EBF;&#x91CC;&#x9762;&#x800C;&#x4E14;B&#x5728;A&#x540E;&#x9762;&#x53D1;&#x751F;&#x3002;</li>
-<li>A&#x662F;&#x6D88;&#x606F;&#x53D1;&#x9001;&#x4E8B;&#x4EF6;&#xFF0C; B&#x662F;&#x4E0E;&#x4E4B;&#x5BF9;&#x5E94;&#x7684;&#x63A5;&#x6536;&#x4E8B;&#x4EF6;&#x3002;</li>
-<li>&#x5982;&#x679C;A-&gt;C, &#x4E14;C-&gt;B&#x3002;</li>
-</ol>
-<p>&#x663E;&#x7136;&#xFF0C;&#x8FD9;&#x91CC;&#x7684;A&#x4E8B;&#x4EF6;&#x548C;B&#x4E8B;&#x4EF6;&#x4E4B;&#x95F4;&#x4E0D;&#x7B26;&#x5408;&#x4E0A;&#x9762;&#x4E09;&#x6761;&#x5B9A;&#x4E49;&#x4E2D;&#x7684;&#x4EFB;&#x610F;&#x4E00;&#x4E2A;&#x3002;&#x4E5F;&#x5C31;&#x662F;&#x8BF4;&#xFF0C;A&#x548C;B&#x4E4B;&#x95F4;&#x662F;&#x65E0;&#x5173;&#x8054;&#x7684;&#x3002;&#x6240;&#x4EE5;&#x5982;&#x679C;&#x77E5;&#x9053;<strong>LC(A) &lt; LC(B)&#x5E76;&#x4E0D;&#x80FD;&#x63A8;&#x65AD;&#x51FA;A happens before B</strong>&#x3002;</p>
-<p>&#x6211;&#x4EEC;&#x53EF;&#x4EE5;&#x53D1;&#x73B0;&#xFF0C;&#x5982;&#x679C;&#x4E24;&#x4E2A;&#x4E8B;&#x4EF6;&#x4E4B;&#x95F4;&#x5B58;&#x5728;&#x4E00;&#x4E2A;&#x786E;&#x5B9A;&#x7684;Happens-before&#x5173;&#x7CFB;&#xFF0C;&#x5728;&#x56FE;&#x4E2D;&#x662F;&#x53EF;&#x4EE5;&#x753B;&#x4E00;&#x6761;&#x7EBF;&#x8FDE;&#x63A5;&#x4E24;&#x4E2A;&#x65F6;&#x95F4;&#x7684;&#x3002;&#x5982;&#x679C;&#x4E0D;&#x5B58;&#x5728;&#x5728;&#x4E00;&#x4E2A;&#x786E;&#x5B9A;&#x7684;Happens-before&#x5173;&#x7CFB;&#xFF0C;&#x5219;&#x4E0D;&#x80FD;&#x753B;&#x51FA;&#x8FD9;&#x6837;&#x7684;&#x4E00;&#x6761;&#x7EBF;&#x3002;</p>
-<p><img src="https://files.huadonghu.com/20200522/VKe1K4.png" alt=""></p>
-<p>&#x5F53;&#x7136;&#xFF0C;&#x4E0A;&#x56FE;&#x4E2D;&#x6211;&#x6CA1;&#x6709;&#x5355;&#x72EC;&#x5C06;&#x5404;&#x81EA;&#x8FDB;&#x7A0B;&#x5185;&#x7684;&#x4E8B;&#x4EF6;&#x8FDE;&#x7EBF;&#x3002;</p>
-<p>Lamport Clock&#x4E0D;&#x80FD;&#x63CF;&#x8FF0;&#x56E0;&#x679C;&#x5173;&#x7CFB;</p>
-<p>&#x4E0A;&#x9762;&#x7684;&#x4F8B;&#x5B50;&#x6458;&#x81EA;&#x8BBA;&#x6587;D<a href="https://www.vs.inf.ethz.ch/publ/papers/holygrail.pdf" target="_blank">etecting Causal Relationships in Distributed Computations: In Search of the Holy Grail</a>&#xFF0C;&#x8FD9;&#x7BC7;&#x8BBA;&#x6587;&#x53D1;&#x8868;&#x5728;1994&#x5E74;&#xFF0C;&#x4F5C;&#x8005;Mattern&#x4E5F;&#x53D1;&#x660E;&#x4E86;&#x53E6;&#x4E00;&#x4E2A;&#x903B;&#x8F91;&#x65F6;&#x949F;&#xFF0C;&#x4E00;&#x4E2A;&#x80FD;&#x63CF;&#x8FF0;&#x56E0;&#x679C;&#x5173;&#x7CFB;&#x7684;&#x65F6;&#x949F;&#xFF0C;Vector Clock&#xFF0C;&#x8FD9;&#x4E2A;&#x6211;&#x4F1A;&#x5728;&#x540E;&#x9762;&#x4ECB;&#x7ECD;&#x3002;</p>
-<p>&#x8BF4;&#x56DE;&#x6765;Lamport Clock&#xFF0C; &#x65E2;&#x7136;&#x4ED6;&#x5E76;&#x4E0D;&#x80FD;&#x63CF;&#x8FF0;&#x56E0;&#x679C;&#x5173;&#x7CFB;(Causality)&#xFF0C;&#x90A3;&#x6211;&#x4EEC;&#x4E3A;&#x4EC0;&#x4E48;&#x8FD8;&#x8981;&#x7528;&#x5B83;&#x5462;&#xFF1F;</p>
-<p>&#x5148;&#x8BF4;&#x8FC7;&#x6570;&#x5B66;&#x95EE;&#x9898;&#xFF0C;&#x5982;&#x679C;P&#x80FD;&#x63A8;&#x51FA;Q, P=&gt;Q&#xFF0C;&#x90A3;&#x4E48;&#x9006;&#x5426;&#x547D;&#x9898;&#xFF5E;Q=&gt;&#xFF5E;P&#x6210;&#x7ACB;&#x3002;</p>
-<p>&#x5982;&#x679C;A happens before B, &#x4E5F;&#x5C31;&#x662F; A -&gt; B&#xFF0C;&#x5219; LC(A) &lt; LC(B)&#x3002; &#x90A3;&#x4E48;&#x5982;&#x679C;LC(A) &gt; LC(B)&#xFF0C;&#x90A3;&#x4E48;A -&gt; B&#x80AF;&#x5B9A;&#x4E3A;&#x5047;&#xFF0C;&#x4E5F;&#x5373;&#x662F;A&#x80AF;&#x5B9A;&#x4E0D;&#x4F1A;happens before B&#x3002;</p>
-<p>&#x903B;&#x8F91;&#x5F88;&#x7B80;&#x5355;&#xFF0C;&#x90A3;&#x4E48;&#x6709;&#x4EC0;&#x4E48;&#x7528;&#x5462;&#xFF1F;Debug&#x3002;</p>
-<p>&#x4E0B;&#x4E00;&#x8282;&#x6211;&#x4EEC;&#x8BA8;&#x8BBA;vector clocks&#x3002;</p>
+<p><img src=".gitbook/assets/image%20%2833%29.png" alt=""></p>
+<p>physical clocks so what it what did we 18:41 say the alternative to 18:43 using physical clocks was logical clocks</p>
+<p>yeah so this is this is an entirely different notion of clock logical clocks</p>
+<p>don&apos;t tell us anything about the time of day and they don&apos;t tell us anything about time elapsed </p>
+<p>instead logical clocks only tell us about the ordering of events</p>
+<p>simplest kind of logical clock that I am aware of is called a Lamport clock</p>
+<p>nna Lambert clock is just a way of assigning numbers to events</p>
+<p>if you have an event let&apos;s say event a then it&apos;s Lamport clock which we write LC of a</p>
+<p>it might be three for instance so what are these Lamport clocks mean like what is that number three tell you</p>
+<p>here&apos;s a rule we know that if a happens before B then the Lamport clock of a is less than the Lamport clock of B</p>
+<p>so we say that Lamport clocks are consistent with causality that means that if there&apos;s a causal relationship between a and B or a potentially causal relationship between a and B that is if a happens before B, then we know that the Lamport clock of a is going to be less than the Lamport clock of B</p>
+<p>we&apos;re gonna write down the rules for assigning Lamport clocks to events</p>
+<p>here&apos;s some events</p>
+<p><img src=".gitbook/assets/image%20%2828%29.png" alt=""></p>
+<p>all right so here&apos;s the algorithm for assigning Lamport clocks to events</p>
+<ul>
+<li>first of all every process has a counter that&apos;s initialized to zero an integer counter or natural number counter</li>
+<li>on every event a process will increment its counter by one</li>
+<li>when sending a message a process includes its current counter along with the message</li>
+<li>step 4 is what you do when receiving a message, what do you think happens here what do you think you do when you receive a message? what you&apos;re gonna do is set your counter to the max of( your local counter and the message counter plus one)</li>
+</ul>
+<p>if you&apos;ve seen this before and it didn&apos;t have the plus one then that&apos;s why that might be why but we&apos;re going to be treating message receives as events for now later in the course we might look at a scenario where message receives don&apos;t count as it events</p>
+<p>we have a way of assigning numbers to events now so let&apos;s try it</p>
+<p><img src=".gitbook/assets/image%20%2827%29.png" alt=""></p>
+<p><img src=".gitbook/assets/image%20%2832%29.png" alt=""></p>
+<p>you&apos;ll see that this this condition that we wrote down before is in fact true so if a happens before B then the lamp or a clock of a is indeed going to be less than the Lamport clock of B this was a pretty simple one</p>
+<p>we know that if a happens before B then Lamport clock of whoops that should just be less than L C of a is less than L C of B</p>
+<p>so if LC of A is less than L C of B do we know that it happened before B</p>
+<p>the answer is no</p>
+<p>let&apos;s look at an example of that</p>
+<p><img src=".gitbook/assets/image%20%2829%29.png" alt=""></p>
+<p><img src=".gitbook/assets/image%20%2823%29.png" alt=""></p>
+<p>if we look at a and B do we know for sure that a happened before B? NO!</p>
+<p>by our definition of happens before, on the same process line right and that doesn&apos;t happen here because they&apos;re in different process lines, or one has to be assigned and the other has to be a corresponding receive and that&apos;s not the case here either or they have to be ena happens before relationship by transitivity but that&apos;s not the case here either. there is no connection between a and B in terms of the happens before relation.we have a situation here where the Lamport clock of a is less than Lamport clock of b but it certainly does not mean that a had to happen before B</p>
+<p>o the answer to this question if the Lamport clock of a is less than Lamport clock of B do we know a happened before B and the answer to that is a resounding no</p>
+<p><img src=".gitbook/assets/image%20%2820%29.png" alt=""></p>
+<p>if you want to know if this event know happened before this event if you can reach the second event from the first event then you know that it happened that that the first event happened before the second event. so in other words like if I wanted to know if this event right here the first event at the top of p2 if I wanted to know whether it happened before this one. I just asked okay can I draw a line from there to there and it turns out that I can.</p>
+<p>we can say that causality is graph reach ability in space-time, in this picture you can&apos;t reach B from a so you can&apos;t say that a happened before B even though basil import clock is bigger than A&apos;s.</p>
+<p><img src=".gitbook/assets/image%20%2831%29.png" alt=""></p>
+<p>this is the consistent with causality direction but it&apos;s not the case that if the Lamport clock of a is less than the Lamport clock of B then a happens before B. so we say Lamport clocks do not characterize causality</p>
+<p>it&apos;s an example that&apos;s taken from a paper by Schwartz and Mattern which i think is from 1994 and the paper is called detecting causal relationships in distributed systems in search of the Holy Grail so Mattern was one of the people who developed another kind of logical clock that does characterize causality unlike Lamport clocks and that&apos;s called a vector clock and we&apos;ll talk about that soon.</p>
+<p>vector clocks were invented in the 80s some time and then this paper didn&apos;t come out until 1994 but I think this paper does a really really nice job of explaining the need for this notion of vector clock</p>
+<p>we&apos;re still talking about Lamport clocks not vector clocks so Lamport clocks well okay so we say we said limpert clocks do not characterize causality, Lamport clocks do not characterize causality um well okay so what are they good for why would you ever want to use that.</p>
+<p>I want to give a kind of a mathematical argument for for why Lamport clocks are still useful even though they don&apos;t characterize causality</p>
+<p><img src=".gitbook/assets/image%20%2825%29.png" alt=""></p>
+<p>we know that if a happens before B then the Lamport clock of a is less than the limpert clock of B</p>
+<p>contra positives say that if P implies Q then not Q implies not P</p>
+<p>if it&apos;s not the case that the Lamport clock of a is less than the Lamport clock of B, then it&apos;s not the case that a happens before B.that&apos;s the contrapositive of this thing.</p>
+<p><img src=".gitbook/assets/image%20%2818%29.png" alt=""></p>
+<p>that&apos;s what Lamport clocks can be used for they can rule out things as not having caused other things and that actually turns out to be really valuable. it lets us debug.</p>
+<p>Quiz</p>
+<p><img src=".gitbook/assets/image%20%2822%29.png" alt=""></p>
+<p>next time we&apos;re going to talk about vector clocks</p>
 
                                 
                                 </section>
@@ -266,7 +281,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"3. Lamport时钟(Lamport clocks)","level":"1.4","depth":1,"previous":{"title":"2. Lamport Diagrams，Happens-before，同步网络与异步网络，偏序关系","level":"1.3","depth":1,"path":"2.-lamport-diagramshappensbefore-tong-bu-wang-luo-yu-yi-bu-wang-luo-pian-xu-guan-xi.md","ref":"2.-lamport-diagramshappensbefore-tong-bu-wang-luo-yu-yi-bu-wang-luo-pian-xu-guan-xi.md","articles":[]},"dir":"ltr"},"config":{"plugins":["disqus","ga"],"root":".","styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"pluginsConfig":{"disqus":{"useIdentifier":false,"shortName":"distributed-system"},"ga":{"configuration":"auto","token":"UA-131378726-6"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"theme":"default","author":"Huadong Hu","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"title":"分布式系统","language":"zh-hans","gitbook":"*","description":"分布式系统概述"},"file":{"path":"3.recap-of-partial-orders-total-orders-recap-of-happens-before-lamport-clocks.md","mtime":"2020-05-23T03:11:07.503Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-05-23T03:11:16.414Z"},"basePath":".","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"3. Lamport时钟(Lamport clocks)","level":"1.4","depth":1,"previous":{"title":"2. Lamport Diagrams，Happens-before，同步网络与异步网络，偏序关系","level":"1.3","depth":1,"path":"2.-lamport-diagramshappensbefore-tong-bu-wang-luo-yu-yi-bu-wang-luo-pian-xu-guan-xi.md","ref":"2.-lamport-diagramshappensbefore-tong-bu-wang-luo-yu-yi-bu-wang-luo-pian-xu-guan-xi.md","articles":[]},"dir":"ltr"},"config":{"plugins":["disqus","ga"],"root":".","styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"pluginsConfig":{"disqus":{"useIdentifier":false,"shortName":"distributed-system"},"ga":{"configuration":"auto","token":"UA-131378726-6"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"theme":"default","author":"Huadong Hu","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"title":"分布式系统","language":"zh-hans","gitbook":"*","description":"分布式系统概述"},"file":{"path":"3.recap-of-partial-orders-total-orders-recap-of-happens-before-lamport-clocks.md","mtime":"2020-05-23T03:26:30.233Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-05-23T03:26:38.770Z"},"basePath":".","book":{"language":""}});
         });
     </script>
 </div>
