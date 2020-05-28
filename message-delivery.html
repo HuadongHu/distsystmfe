@@ -61,7 +61,7 @@
     <link rel="shortcut icon" href="gitbook/images/favicon.ico" type="image/x-icon">
 
     
-    <link rel="next" href="7.-chandylamport-snapshot.html" />
+    <link rel="next" href="7.-chandylamport-snapshot-algorithm.html" />
     
     
     <link rel="prev" href="5.-wang-luo-xie-yi-protocol-yu-lamport-diagram.html" />
@@ -184,9 +184,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.8" data-path="7.-chandylamport-snapshot.html">
+        <li class="chapter " data-level="1.8" data-path="7.-chandylamport-snapshot-algorithm.html">
             
-                <a href="7.-chandylamport-snapshot.html">
+                <a href="7.-chandylamport-snapshot-algorithm.html">
             
                     
                     7. Chandy-Lamport快照(Snapshot)算法
@@ -332,8 +332,8 @@
 <p>&#x4E0B;&#x9762;&#x7684;&#x4F8B;&#x5B50;&#x7559;&#x7ED9;&#x4F60;&#x7EC3;&#x4E60;&#x4E0B;&#x8FD9;&#x4E2A;&#x7B97;&#x6CD5;&#x3002;</p>
 <p><img src="https://files.huadonghu.com/20200526/leQlMz.png" alt=""></p>
 <h4 id="&#x56E0;&#x679C;&#x5173;&#x7CFB;&#x7684;&#x5E94;&#x7528;">&#x56E0;&#x679C;&#x5173;&#x7CFB;&#x7684;&#x5E94;&#x7528;</h4>
-<p>&#x56E0;&#x679C;&#x5173;&#x7CFB;&#xFF0C;&#x6216;&#x8005;&#x8BF4;happens-before&#x5173;&#x7CFB;&#xFF0C;&#x6211;&#x4EEC;&#x5B66;&#x4E60;&#x4E86;&#x53EF;&#x4EE5;&#x7528;&#x6765;&#x5224;&#x65AD;&#x4E8B;&#x4EF6;&#x53D1;&#x751F;&#x7684;&#x5148;&#x540E;&#x987A;&#x5E8F;&#x8FDB;&#x884C;&#x7CFB;&#x7EDF;&#x7684;debug&#xFF0C;&#x4E5F;&#x5B66;&#x4E60;&#x4E86;&#x7528;&#x6765;&#x4FDD;&#x8BC1;&#x56E0;&#x679C;&#x4EA4;&#x4ED8;&#xFF0C;&#x4E0B;&#x4E00;&#x7BC7;&#x6587;&#x7AE0;&#x6211;&#x4EEC;&#x4F1A;&#x4ECB;&#x7ECD;&#x56E0;&#x679C;&#x5173;&#x7CFB;&#x7684;&#x53E6;&#x4E00;&#x4E2A;&#x5E94;&#x7528;&#xFF1A;&#x5FEB;&#x7167;&#x7B97;&#x6CD5;&#x3002;&#x5FEB;&#x7167;&#x662F;&#x5728;&#x67D0;&#x4E00;&#x4E2A;&#x65F6;&#x523B;&#x5C06;&#x6574;&#x4E2A;&#x7CFB;&#x7EDF;&#x7684;&#x6240;&#x6709;&#x72B6;&#x6001;&#x8FDB;&#x884C;&#x4FDD;&#x5B58;&#xFF0C;&#x5C31;&#x597D;&#x50CF;&#x7ED9;&#x7CFB;&#x7EDF;&#x62CD;&#x4E2A;&#x7167;&#x7247;&#x4E00;&#x6837;&#x3002;&#x5982;&#x679C;&#x6211;&#x4EEC;&#x8BBE;&#x5B9A;&#x4E3A;&#x6BCF;&#x5929;&#x4E0A;&#x5348;10&#x70B9;&#x7ED9;&#x7CFB;&#x7EDF;&#x505A;&#x5FEB;&#x7167;&#xFF0C;&#x6709;&#x53EF;&#x80FD;&#x56E0;&#x4E3A;&#x5404;&#x4E2A;&#x673A;&#x5668;&#x95F4;&#x65F6;&#x95F4;&#x4E0D;&#x4E00;&#x81F4;&#xFF0C;&#x5BFC;&#x81F4;&#x6709;&#x4E9B;&#x72B6;&#x6001;&#x5E76;&#x6CA1;&#x6709;&#x88AB;&#x52A0;&#x8FDB;&#x5FEB;&#x7167;&#xFF0C;&#x5982;&#x4E0B;&#x56FE;&#x3002;&#x8FD9;&#x65F6;&#xFF0C;&#x81EA;&#x7136;&#x65F6;&#x949F;&#x662F;&#x4E0D;&#x9002;&#x5408;&#x7684;&#x3002;</p>
-<p><img src="https://files.huadonghu.com/20200526/r3X03d.png" alt=""></p>
+<p>&#x56E0;&#x679C;&#x5173;&#x7CFB;&#xFF0C;&#x6216;&#x8005;&#x8BF4;happens-before&#x5173;&#x7CFB;&#xFF0C;&#x6211;&#x4EEC;&#x5B66;&#x4E60;&#x4E86;&#x53EF;&#x4EE5;&#x7528;&#x6765;&#x5224;&#x65AD;&#x4E8B;&#x4EF6;&#x53D1;&#x751F;&#x7684;&#x5148;&#x540E;&#x987A;&#x5E8F;&#x8FDB;&#x884C;&#x7CFB;&#x7EDF;&#x7684;debug&#xFF0C;&#x4E5F;&#x5B66;&#x4E60;&#x4E86;&#x7528;&#x6765;&#x4FDD;&#x8BC1;&#x56E0;&#x679C;&#x4EA4;&#x4ED8;&#xFF0C;&#x4E0B;&#x4E00;&#x7BC7;&#x6587;&#x7AE0;&#x6211;&#x4EEC;&#x4F1A;&#x4ECB;&#x7ECD;&#x56E0;&#x679C;&#x5173;&#x7CFB;&#x7684;&#x53E6;&#x4E00;&#x4E2A;&#x5E94;&#x7528;&#xFF1A;&#x5FEB;&#x7167;&#x7B97;&#x6CD5;&#x3002;&#x5FEB;&#x7167;&#x662F;&#x5728;&#x67D0;&#x4E00;&#x4E2A;&#x65F6;&#x523B;&#x5C06;&#x6574;&#x4E2A;&#x7CFB;&#x7EDF;&#x7684;&#x6240;&#x6709;&#x72B6;&#x6001;&#x8FDB;&#x884C;&#x4FDD;&#x5B58;&#xFF0C;&#x5C31;&#x597D;&#x50CF;&#x7ED9;&#x7CFB;&#x7EDF;&#x62CD;&#x4E2A;&#x7167;&#x7247;&#x4E00;&#x6837;&#x3002;&#x5982;&#x679C;&#x6211;&#x4EEC;&#x8BBE;&#x5B9A;&#x4E3A;&#x6BCF;&#x5929;&#x4E0A;&#x5348;10&#x70B9;&#x7ED9;&#x7CFB;&#x7EDF;&#x505A;&#x5FEB;&#x7167;&#xFF0C;&#x6709;&#x53EF;&#x80FD;&#x56E0;&#x4E3A;&#x5404;&#x4E2A;&#x673A;&#x5668;&#x95F4;&#x65F6;&#x95F4;&#x4E0D;&#x4E00;&#x81F4;&#xFF0C;&#x5BFC;&#x81F4;&#x6709;&#x4E9B;&#x72B6;&#x6001;&#x5E76;&#x6CA1;&#x6709;&#x88AB;&#x52A0;&#x8FDB;&#x5FEB;&#x7167;&#xFF0C;&#x5982;&#x4E0B;&#x56FE;&#xFF0C;&#x6211;&#x4EEC;&#x62FF;&#x5230;M1&#x548C;M2&#x7684;&#x4E24;&#x4E2A;&#x5FEB;&#x7167;&#xFF0C;&#x53D1;&#x73B0;M2&#x6709;&#x63A5;&#x6536;&#x5230;M1&#x7684;&#x6D88;&#x606F;&#xFF08;&#x7EA2;&#x5708;&#x6807;&#x8BB0;&#x7684;&#xFF09;&#xFF0C;&#x4F46;&#x662F;M1&#x7684;&#x5FEB;&#x7167;&#x4E2D;&#x5E76;&#x6CA1;&#x6709;&#x8BB0;&#x5F55;&#x8FD9;&#x6761;&#x6D88;&#x606F;&#x7684;&#x53D1;&#x9001;&#x3002;&#x8FD9;&#x65F6;&#xFF0C;&#x81EA;&#x7136;&#x65F6;&#x949F;&#x662F;&#x4E0D;&#x9002;&#x5408;&#x7684;&#x3002;</p>
+<p><img src="https://files.huadonghu.com/20200527/2A4Hlc.png" alt=""></p>
 
                                 
                                 </section>
@@ -366,7 +366,7 @@
                 </a>
                 
                 
-                <a href="7.-chandylamport-snapshot.html" class="navigation navigation-next " aria-label="Next page: 7. Chandy-Lamport快照(Snapshot)算法">
+                <a href="7.-chandylamport-snapshot-algorithm.html" class="navigation navigation-next " aria-label="Next page: 7. Chandy-Lamport快照(Snapshot)算法">
                     <i class="fa fa-angle-right"></i>
                 </a>
                 
@@ -377,7 +377,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"6. 消息交付(Message Delivery)","level":"1.7","depth":1,"next":{"title":"7. Chandy-Lamport快照(Snapshot)算法","level":"1.8","depth":1,"path":"7.-chandylamport-snapshot.md","ref":"7.-chandylamport-snapshot.md","articles":[]},"previous":{"title":"5. 网络协议(Protocol)与Lamport diagram","level":"1.6","depth":1,"path":"5.-wang-luo-xie-yi-protocol-yu-lamport-diagram.md","ref":"5.-wang-luo-xie-yi-protocol-yu-lamport-diagram.md","articles":[]},"dir":"ltr"},"config":{"plugins":["disqus","ga"],"root":".","styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"pluginsConfig":{"disqus":{"useIdentifier":false,"shortName":"distributed-system"},"ga":{"configuration":"auto","token":"UA-131378726-6"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"theme":"default","author":"Huadong Hu","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"title":"分布式系统","language":"zh-hans","gitbook":"*","description":"分布式系统概述"},"file":{"path":"message-delivery.md","mtime":"2020-05-27T02:14:50.331Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-05-27T02:15:13.607Z"},"basePath":".","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"6. 消息交付(Message Delivery)","level":"1.7","depth":1,"next":{"title":"7. Chandy-Lamport快照(Snapshot)算法","level":"1.8","depth":1,"path":"7.-chandylamport-snapshot-algorithm.md","ref":"7.-chandylamport-snapshot-algorithm.md","articles":[]},"previous":{"title":"5. 网络协议(Protocol)与Lamport diagram","level":"1.6","depth":1,"path":"5.-wang-luo-xie-yi-protocol-yu-lamport-diagram.md","ref":"5.-wang-luo-xie-yi-protocol-yu-lamport-diagram.md","articles":[]},"dir":"ltr"},"config":{"plugins":["disqus","ga"],"root":".","styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"pluginsConfig":{"disqus":{"useIdentifier":false,"shortName":"distributed-system"},"ga":{"configuration":"auto","token":"UA-131378726-6"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"theme":"default","author":"Huadong Hu","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"title":"分布式系统","language":"zh-hans","gitbook":"*","description":"分布式系统概述"},"file":{"path":"message-delivery.md","mtime":"2020-05-28T02:58:36.709Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-05-28T02:59:47.579Z"},"basePath":".","book":{"language":""}});
         });
     </script>
 </div>
