@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
-        <title>5. 网络协议(Protocol)与Lamport diagram · 分布式系统</title>
+        <title>9. 可靠消息交付 · 分布式系统</title>
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="description" content="">
         <meta name="generator" content="GitBook 3.2.3">
@@ -61,10 +61,8 @@
     <link rel="shortcut icon" href="gitbook/images/favicon.ico" type="image/x-icon">
 
     
-    <link rel="next" href="message-delivery.html" />
     
-    
-    <link rel="prev" href="vector-clock.html" />
+    <link rel="prev" href="safety-liveness.html" />
     
 
     </head>
@@ -158,7 +156,7 @@
             
         </li>
     
-        <li class="chapter active" data-level="1.6" data-path="5.-wang-luo-xie-yi-protocol-yu-lamport-diagram.html">
+        <li class="chapter " data-level="1.6" data-path="5.-wang-luo-xie-yi-protocol-yu-lamport-diagram.html">
             
                 <a href="5.-wang-luo-xie-yi-protocol-yu-lamport-diagram.html">
             
@@ -210,7 +208,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.10" data-path="reliable-delivery.html">
+        <li class="chapter active" data-level="1.10" data-path="reliable-delivery.html">
             
                 <a href="reliable-delivery.html">
             
@@ -253,7 +251,7 @@
     <!-- Title -->
     <h1>
         <i class="fa fa-circle-o-notch fa-spin"></i>
-        <a href="." >5. 网络协议(Protocol)与Lamport diagram</a>
+        <a href="." >9. 可靠消息交付</a>
     </h1>
 </div>
 
@@ -268,29 +266,10 @@
     
                                 <section class="normal markdown-section">
                                 
-                                <h1 id="5-&#x7F51;&#x7EDC;&#x534F;&#x8BAE;protocol&#x4E0E;lamport-diagram">5. &#x7F51;&#x7EDC;&#x534F;&#x8BAE;(Protocol)&#x4E0E;Lamport diagram</h1>
-<h2 id="&#x7F51;&#x7EDC;&#x534F;&#x8BAE;protocol&#x4E0E;lamport-diagram">&#x7F51;&#x7EDC;&#x534F;&#x8BAE;(Protocol)&#x4E0E;Lamport diagram</h2>
-<p>&#x7F51;&#x7EDC;&#x534F;&#x8BAE;&#x7B80;&#x5355;&#x6765;&#x8BF4;&#x5C31;&#x662F;&#x5236;&#x5B9A;&#x7684;&#x4E00;&#x4E9B;&#x53D1;&#x9001;&#x63A5;&#x6536;&#x65B9;&#x9075;&#x5FAA;&#x7684;&#x89C4;&#x5219;&#x3002;</p>
-<p>&#x6BD4;&#x5982;&#x6211;&#x4EEC;&#x5236;&#x5B9A;&#x4E00;&#x4E2A;&#x8FD9;&#x6837;&#x7684;&#x7F51;&#x7EDC;&#x534F;&#x8BAE;&#xFF1A;</p>
-<ul>
-<li>&#x4E00;&#x65B9;&#x53D1;&#x9001;&quot;How are you&#x201C;</li>
-<li>&#x4E00;&#x65B9;&#x5219;&#x56DE;&#x590D;&quot;Good!&quot;</li>
-</ul>
-<p>&#x4E0B;&#x65B9;&#x662F;&#x8FD9;&#x6837;&#x534F;&#x8BAE;&#x7684;&#x4E00;&#x4E2A;&#x793A;&#x4F8B;</p>
-<p><img src="https://files.huadonghu.com/20200523/s0NDw5.png?xaxa" alt=""></p>
-<p>&#x90A3;&#x6211;&#x6362;&#x4E00;&#x79CD;&#x534F;&#x8BAE;&#x8FD0;&#x884C;(Protocol Run)&#x65B9;&#x5F0F;&#x5462;&#xFF1F;&#x662F;&#x534F;&#x8BAE;&#x5F02;&#x5E38;(Protocol Anomaly)&#x5417;&#xFF1F;</p>
-<p><img src="https://files.huadonghu.com/20200523/A7lLqJ.png" alt=""></p>
-<p>&#x5F88;&#x663E;&#x7136;&#xFF0C;&#x4E5F;&#x662F;&#x6B63;&#x786E;&#x7684;&#xFF0C;&#x56E0;&#x4E3A;&#x534F;&#x8BAE;&#x4E2D;&#x5E76;&#x6CA1;&#x6709;&#x89C4;&#x5B9A;&#x53EA;&#x80FD;Alice&#x5148;&#x8BF4;&quot;how are you&quot;&#x3002;</p>
-<p>&#x90A3;&#x4E0B;&#x9762;&#x7684;&#x5462;&#xFF1F;</p>
-<p><img src="https://files.huadonghu.com/20200523/Q4rOGk.png" alt=""></p>
-<p>&#x663E;&#x7136;&#x662F;&#x9519;&#x8BEF;&#x7684;&#xFF0C;&#x534F;&#x8BAE;&#x89C4;&#x5B9A;&#x5FC5;&#x987B;&#x662F;&#x5148;&quot;how are you&quot;&#xFF0C;&#x7136;&#x540E;&#x56DE;&#x590D;&quot;Good&quot;&#x3002;</p>
-<p>&#x63A5;&#x4E0B;&#x6765;&#x7684;&#x8FD9;&#x4E2A;&#x5462;&#xFF1F;</p>
-<p><img src="https://files.huadonghu.com/20200523/GWjZfn.png" alt=""></p>
-<p>&#x8FD9;&#x4E2A;&#x4F8B;&#x5B50;&#x6709;&#x70B9;&#x5947;&#x602A;&#xFF0C;&#x4F46;&#x662F;&#x5E76;&#x6CA1;&#x6709;&#x8FDD;&#x80CC;&#x534F;&#x8BAE;&#x3002;&#x6709;&#x53EF;&#x80FD;Bob&#x559D;&#x9189;&#x9152;&#x4E86;&#xFF0C;&#x56DE;&#x590D;&#x7684;&#x6709;&#x70B9;&#x6162;&#x3002;&#x50CF;&#x4E0B;&#x9762;&#x8FD9;&#x6837;&#x5B50;&#x3002;</p>
-<p><img src="https://files.huadonghu.com/20200523/plgVLU.png?xa11xaaxsa" alt=""></p>
-<p>&#x4ECE;&#x4E0A;&#x9762;&#x7684;&#x51E0;&#x4E2A;&#x4F8B;&#x5B50;&#xFF0C;&#x6211;&#x4EEC;&#x53EF;&#x4EE5;&#x5F97;&#x51FA;&#x7ED3;&#x8BBA;&#xFF0C;Lamport diagram&#x4E0D;&#x80FD;&#x63CF;&#x8FF0;&#x4E8B;&#x4EF6;&#x53D1;&#x751F;&#x7684;&#x65F6;&#x95F4;&#x957F;&#x77ED;&#xFF0C;&#x4F46;&#x662F;&#x53EF;&#x4EE5;&#x63CF;&#x8FF0;&#x4E8B;&#x4EF6;&#x7684;&#x5148;&#x540E;&#x987A;&#x5E8F;&#x4EE5;&#x53CA;&#x8FDD;&#x80CC;&#x534F;&#x8BAE;&#x7684;&#x60C5;&#x5F62;&#x3002;</p>
-<p>&#x4E0A;&#x9762;&#x6211;&#x4EEC;&#x731C;&#x6D4B;Bob&#x53EF;&#x80FD;&#x559D;&#x9189;&#x9152;&#x4E86;&#x624D;&#x56DE;&#x590D;&#x7684;&#x6162;&#xFF0C;&#x673A;&#x5668;&#x5F53;&#x7136;&#x4E0D;&#x53EF;&#x80FD;&#x559D;&#x9189;&#x9152;&#x3002;&#x4E00;&#x4E2A;&#x5408;&#x7406;&#x7684;&#x731C;&#x6D4B;&#x5C31;&#x662F;&#x5904;&#x7406;&#x7684;&#x6162;&#xFF0C;Lamport diagram&#x4E2D;&#x7684;&#x70B9;&#x53EA;&#x80FD;&#x8868;&#x793A;&#x6D88;&#x606F;&#x9001;&#x8FBE;(Message sent)&#xFF0C;&#x4F46;&#x662F;&#x4E0D;&#x80FD;&#x8868;&#x793A;&#x6D88;&#x606F;&#x7684;&#x4EA4;&#x4ED8;(Delivered)&#x7684;&#x65F6;&#x95F4;&#x3002;&#x4E24;&#x8005;&#x7684;&#x533A;&#x522B;&#x6211;&#x4EEC;&#x4E0B;&#x6B21;&#x8BA8;&#x8BBA;&#x3002;</p>
-
+                                <h1 id="9-&#x53EF;&#x9760;&#x6D88;&#x606F;&#x4EA4;&#x4ED8;">9. &#x53EF;&#x9760;&#x6D88;&#x606F;&#x4EA4;&#x4ED8;</h1>
+<p>&#x9884;&#x8BA1;&#x66F4;&#x65B0;&#x65F6;&#x95F4;5&#x6708;22&#x65E5;</p>
+<div style="width: 440;height:380px;float:left">
+<iframe width="440" height="370" src="https://154d5709.sibforms.com/serve/MUIEABYu83l4_lJjMKhDCLjdM0uAUQ2jIFE8E-lYTqFNtPflxw9z0CBre28UFJnB-3ZN2f_xF978Q1Oll_Q3j_RLcdIVbknbI1YOyrwWxSARSFHrkXL44UItbwPjDHaZGFRnQ-P9TcKnxvgwFgm4hTLhipwmbQl2H6R7iTvUqtRDWdp_o3jZQau0fSEwu3bmrw7ISEJ2SlE8gUMn" frameborder="0" scrolling="no" allowfullscreen style="display: block;margin-left: auto;margin-right: auto;max-width: 100%;"></iframe></div>
                                 
                                 </section>
                             
@@ -317,14 +296,10 @@
 
             
                 
-                <a href="vector-clock.html" class="navigation navigation-prev " aria-label="Previous page: 4. 向量时钟(Vector Clock)">
+                <a href="safety-liveness.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page: 8. Safety 和 Liveness">
                     <i class="fa fa-angle-left"></i>
                 </a>
                 
-                
-                <a href="message-delivery.html" class="navigation navigation-next " aria-label="Next page: 6. 消息交付(Message Delivery)">
-                    <i class="fa fa-angle-right"></i>
-                </a>
                 
             
         
@@ -333,7 +308,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"5. 网络协议(Protocol)与Lamport diagram","level":"1.6","depth":1,"next":{"title":"6. 消息交付(Message Delivery)","level":"1.7","depth":1,"path":"message-delivery.md","ref":"message-delivery.md","articles":[]},"previous":{"title":"4. 向量时钟(Vector Clock)","level":"1.5","depth":1,"path":"vector-clock.md","ref":"vector-clock.md","articles":[]},"dir":"ltr"},"config":{"plugins":["disqus","ga"],"root":".","styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"pluginsConfig":{"disqus":{"useIdentifier":false,"shortName":"distributed-system"},"ga":{"configuration":"auto","token":"UA-131378726-6"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"theme":"default","author":"Huadong Hu","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"title":"分布式系统","language":"zh-hans","gitbook":"*","description":"分布式系统概述"},"file":{"path":"5.-wang-luo-xie-yi-protocol-yu-lamport-diagram.md","mtime":"2020-05-26T02:03:12.584Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-05-29T04:02:56.665Z"},"basePath":".","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"9. 可靠消息交付","level":"1.10","depth":1,"previous":{"title":"8. Safety 和 Liveness","level":"1.9","depth":1,"path":"safety-liveness.md","ref":"safety-liveness.md","articles":[]},"dir":"ltr"},"config":{"plugins":["disqus","ga"],"root":".","styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"pluginsConfig":{"disqus":{"useIdentifier":false,"shortName":"distributed-system"},"ga":{"configuration":"auto","token":"UA-131378726-6"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"theme":"default","author":"Huadong Hu","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"title":"分布式系统","language":"zh-hans","gitbook":"*","description":"分布式系统概述"},"file":{"path":"reliable-delivery.md","mtime":"2020-05-29T04:00:05.389Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-05-29T04:02:56.665Z"},"basePath":".","book":{"language":""}});
         });
     </script>
 </div>
