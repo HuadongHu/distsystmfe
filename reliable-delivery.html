@@ -61,6 +61,8 @@
     <link rel="shortcut icon" href="gitbook/images/favicon.ico" type="image/x-icon">
 
     
+    <link rel="next" href="implementation-of-reliable-delivery.html" />
+    
     
     <link rel="prev" href="safety-liveness.html" />
     
@@ -221,6 +223,19 @@
             
         </li>
     
+        <li class="chapter " data-level="1.11" data-path="implementation-of-reliable-delivery.html">
+            
+                <a href="implementation-of-reliable-delivery.html">
+            
+                    
+                    10. 实现可靠消息交付
+            
+                </a>
+            
+
+            
+        </li>
+    
 
     
 
@@ -267,7 +282,7 @@
                                 <section class="normal markdown-section">
                                 
                                 <h1 id="9-&#x53EF;&#x9760;&#x6D88;&#x606F;&#x4EA4;&#x4ED8;">9. &#x53EF;&#x9760;&#x6D88;&#x606F;&#x4EA4;&#x4ED8;</h1>
-<h3 id="&#x53EF;&#x9760;&#x6D88;&#x606F;&#x4EA4;&#x4ED8;">&#x53EF;&#x9760;&#x6D88;&#x606F;&#x4EA4;&#x4ED8;</h3>
+<h2 id="&#x53EF;&#x9760;&#x6D88;&#x606F;&#x4EA4;&#x4ED8;">&#x53EF;&#x9760;&#x6D88;&#x606F;&#x4EA4;&#x4ED8;</h2>
 <p>P1&#x53D1;&#x9001;&#x4E86;&#x6D88;&#x606F;m&#x5230;P2&#xFF0C;&#x90A3;&#x4E48;P1&#x6216;&#x8005;P2&#x5176;&#x4E2D;&#x7684;&#x4EFB;&#x610F;&#x4E00;&#x4E2A;&#x5D29;&#x6E83;&#x4E86;&#xFF0C;P2&#x6700;&#x7EC8;&#x8FD8;&#x662F;&#x4F1A;&#x4EA4;&#x4ED8;&#x6D88;&#x606F;m&#x3002;</p>
 <p>&#x6211;&#x4EEC;&#x518D;&#x56DE;&#x987E;&#x4E0B;&#x7B2C;&#x4E00;&#x7BC7;&#x6587;&#x7AE0;&#x4E2D;&#x7684;&#x4F8B;&#x5B50;&#xFF0C;</p>
 <p><img src="https://files.huadonghu.com/20200521/Jz13QJ.jpg" alt=""></p>
@@ -281,7 +296,7 @@
 <li>m2&#x56DE;&#x590D;&#x7684;&#x6D88;&#x606F;&#x4E22;&#x5931;</li>
 <li>m2&#x6492;&#x8C0E;&#x4E86;</li>
 </ol>
-<h4 id="&#x9519;&#x8BEF;&#x5206;&#x7C7B;">&#x9519;&#x8BEF;&#x5206;&#x7C7B;</h4>
+<h3 id="&#x9519;&#x8BEF;&#x5206;&#x7C7B;">&#x9519;&#x8BEF;&#x5206;&#x7C7B;</h3>
 <p>&#x4F20;&#x7EDF;&#x4E0A;&#xFF0C;&#x6211;&#x4EEC;&#x53EF;&#x4EE5;&#x5C06;&#x9519;&#x8BEF;&#x5206;&#x4E3A;&#x4EE5;&#x4E0B;&#x51E0;&#x7C7B;</p>
 <ol>
 <li>&#x4E22;&#x5931;&#x9519;&#x8BEF;(Omission Fault)&#xFF0C;&#x6D88;&#x606F;&#x4E22;&#x5931;&#x3002;</li>
@@ -299,7 +314,7 @@
 <li>m2&#x56DE;&#x590D;&#x7684;&#x6D88;&#x606F;&#x4E22;&#x5931;&#x3002;&#x4E22;&#x5931;&#x9519;&#x8BEF;&#x3002;</li>
 <li>m2&#x6492;&#x8C0E;&#x4E86;&#x3002;&#x62DC;&#x5360;&#x5EAD;&#x9519;&#x8BEF;&#x3002;</li>
 </ol>
-<h4 id="&#x9519;&#x8BEF;&#x7C7B;&#x578B;&#x5206;&#x5C42;">&#x9519;&#x8BEF;&#x7C7B;&#x578B;&#x5206;&#x5C42;</h4>
+<h3 id="&#x9519;&#x8BEF;&#x7C7B;&#x578B;&#x5206;&#x5C42;">&#x9519;&#x8BEF;&#x7C7B;&#x578B;&#x5206;&#x5C42;</h3>
 <p>&#x4E0A;&#x9762;&#x7684;&#x56DB;&#x79CD;&#x9519;&#x8BEF;&#x81EA;1990&#x5E74;&#x4EE3;&#x5F00;&#x59CB;&#x4E00;&#x76F4;&#x5728;&#x4F7F;&#x7528;&#xFF0C;&#x6211;&#x4EEC;&#x7ED9;&#x4ED6;&#x4EEC;&#x66F4;&#x52A0;&#x7CBE;&#x786E;&#x7684;&#x5B9A;&#x4E49;&#xFF0C;&#x7136;&#x540E;&#x8BD5;&#x7740;&#x5BF9;&#x5176;&#x8FDB;&#x884C;&#x5206;&#x5C42;&#x3002;</p>
 <ol>
 <li>&#x4E22;&#x5931;&#x9519;&#x8BEF;(Omission Fault)&#xFF0C;&#x6D88;&#x606F;&#x4E22;&#x5931;&#x3002;&#xFF08;&#x8FDB;&#x7A0B;&#x65E0;&#x6CD5;&#x53BB;&#x63A5;&#x6536;&#x6216;&#x8005;&#x53D1;&#x9001;&#x6D88;&#x606F;&#xFF09;</li>
@@ -318,15 +333,13 @@
 <p>&#x4F46;&#x662F;&#x6211;&#x4EEC;&#x8FD8;&#x662F;&#x53EF;&#x4EE5;&#x7B80;&#x5355;&#x5730;&#x8BA8;&#x8BBA;&#x4E0B;&#xFF0C;&#x5F53;&#x8FDB;&#x7A0B;&#x5D29;&#x6E83;&#x6216;&#x8005;&#x6D88;&#x606F;&#x4E22;&#x5931;&#x7684;&#x65F6;&#x5019;&#xFF0C;&#x5176;&#x5B9E;&#x90FD;&#x662F;&#x4E00;&#x79CD;&#x7279;&#x6B8A;&#x7684;&#x65F6;&#x673A;&#x9519;&#x8BEF;&#x3002;&#x6240;&#x4EE5;&#x5982;&#x679C;&#x80FD;&#x591F;&#x5BF9;&#x4E22;&#x5931;&#x6216;&#x8005;&#x5D29;&#x6E83;&#x5BB9;&#x9519;&#xFF0C;&#x90A3;&#x4E5F;&#x80FD;&#x5BF9;&#x65F6;&#x673A;&#x9519;&#x8BEF;&#x5BB9;&#x9519;&#x3002;</p>
 <p>&#x5B9E;&#x9645;&#x4E0A;&#xFF0C;&#x6211;&#x4EEC;&#x8FD8;&#x53EF;&#x4EE5;&#x5BF9;&#x62DC;&#x5360;&#x5EAD;&#x9519;&#x8BEF;&#x8FDB;&#x884C;&#x7EC6;&#x5206;&#x3002;&#x6BD4;&#x5982;&#x6211;&#x4EEC;&#x53EF;&#x4EE5;&#x5229;&#x7528;&#x4E00;&#x4E9B;&#x8BA4;&#x8BC1;&#x6216;&#x8005;&#x673A;&#x5236;&#xFF0C;&#x6BD4;&#x5982;checksum&#xFF0C;&#x5BF9;&#x63A5;&#x6536;&#x5230;&#x7684;&#x6D88;&#x606F;&#x8FDB;&#x884C;&#x68C0;&#x6D4B;&#xFF0C;&#x5982;&#x679C;&#x53D1;&#x73B0;&#x6D88;&#x606F;&#x88AB;&#x7BE1;&#x6539;&#x4E86;&#xFF0C;&#x6211;&#x4EEC;&#x53EF;&#x4EE5;&#x76F4;&#x63A5;&#x4E22;&#x5F03;&#x5230;&#x8FD9;&#x6761;&#x6D88;&#x606F;&#x3002;</p>
 <p><img src="https://files.huadonghu.com/20200531/Rx0n11.png?1" alt=""></p>
-<h4 id="&#x9519;&#x8BEF;&#x6A21;&#x578B;">&#x9519;&#x8BEF;&#x6A21;&#x578B;</h4>
+<h3 id="&#x9519;&#x8BEF;&#x6A21;&#x578B;">&#x9519;&#x8BEF;&#x6A21;&#x578B;</h3>
 <p>&#x9519;&#x8BEF;&#x6A21;&#x578B;&#x662F;&#x5BF9;&#x4E00;&#x4E2A;&#x7CFB;&#x7EDF;&#x53EF;&#x80FD;&#x51FA;&#x73B0;&#x7684;&#x9519;&#x8BEF;&#x79CD;&#x7C7B;&#x7684;&#x63CF;&#x8FF0;&#x3002;</p>
 <p>&#x6BD4;&#x5982;&#x6211;&#x4EEC;&#x53EF;&#x4EE5;&#x8BF4;&#x6211;&#x4EEC;&#x6B63;&#x5728;&#x5904;&#x7406;&#x5D29;&#x6E83;&#x6A21;&#x578B;&#xFF0C;&#x90A3;&#x5C31;&#x610F;&#x5473;&#x7740;&#x6211;&#x4EEC;&#x7684;&#x7CFB;&#x7EDF;&#x9700;&#x8981;&#x5BF9;&#x5D29;&#x6E83;&#x9519;&#x8BEF;&#x8FDB;&#x884C;&#x5BB9;&#x9519;&#xFF0C;&#x540C;&#x7406;&#xFF0C;&#x4E22;&#x5931;&#x9519;&#x8BEF;&#x6A21;&#x578B;&#x9700;&#x8981;&#x5BF9;&#x6D88;&#x606F;&#x4E22;&#x5931;&#x8FDB;&#x884C;&#x5BB9;&#x9519;&#x3002;</p>
 <p>&#x5BF9;&#x6D88;&#x606F;&#x4E22;&#x5931;&#x8FDB;&#x884C;&#x5BB9;&#x9519;&#x662F;&#x5F88;&#x96BE;&#x505A;&#x5230;&#x7684;&#x4E00;&#x4E2A;&#x6A21;&#x578B;&#xFF0C;&#x751A;&#x81F3;&#x53EF;&#x4EE5;&#x8BF4;&#x65E0;&#x6CD5;&#x505A;&#x5230;&#x7684;&#x4E00;&#x4E2A;&#x6A21;&#x578B;&#x3002;&#x6709;&#x4E00;&#x4E2A;&#x8457;&#x540D;&#x7684;&#x95EE;&#x9898;&#x5C31;&#x662F;&#x5BF9;&#x6D88;&#x606F;&#x4E22;&#x5931;&#x6A21;&#x578B;&#x7684;&#x63CF;&#x8FF0;&#xFF1A;two generals problem&#xFF0C;&#x4E24;&#x519B;&#x95EE;&#x9898;&#xFF1A;</p>
 <p>&#x4E24;&#x4E2A;&#x519B;&#x961F;&#x5206;&#x5728;&#x4E24;&#x5904;&#xFF0C;&#x5982;&#x679C;&#x60F3;&#x8981;&#x6253;&#x8D25;&#x654C;&#x4EBA;&#xFF0C;&#x9700;&#x8981;&#x4E24;&#x4E2A;&#x519B;&#x961F;&#x4E00;&#x8D77;&#x51FA;&#x5175;&#x624D;&#x80FD;&#x6210;&#x529F;&#x3002;&#x4E24;&#x4E2A;&#x519B;&#x961F;&#x95F4;&#x662F;&#x901A;&#x8FC7;&#x4FE1;&#x4F7F;&#x8FDB;&#x884C;&#x6D88;&#x606F;&#x4F20;&#x9012;&#xFF0C;&#x6BD4;&#x5982;&#x519B;&#x961F;A&#x51B3;&#x5B9A;&#x665A;&#x4E0A;&#x53D1;&#x8D77;&#x8FDB;&#x653B;&#xFF0C;&#x90A3;&#x4E48;&#x4FE1;&#x4F7F;&#x5C31;&#x4F1A;&#x9001;&#x4FE1;&#x53BB;&#x519B;&#x961F;B&#xFF0C;B&#x786E;&#x8BA4;&#x540E;&#xFF0C;&#x4FE1;&#x4F7F;&#x518D;&#x56DE;&#x5230;A&#xFF0C;&#x544A;&#x8BC9;A&#x519B;&#x961F;B&#x519B;&#x961F;&#x5DF2;&#x7ECF;&#x77E5;&#x60C5;&#x3002;&#x4F46;&#x662F;&#x95EE;&#x9898;&#x662F;&#x4FE1;&#x4F7F;&#x53EF;&#x80FD;&#x4F1A;&#x5728;&#x4E2D;&#x9014;&#x88AB;&#x4FD8;&#x864F;&#xFF0C;&#x90A3;&#x4E48;&#x6D88;&#x606F;&#x5C31;&#x4E0D;&#x80FD;&#x5230;&#x8FBE;&#x3002;&#x8FD9;&#x4E2A;&#x95EE;&#x9898;&#x5F88;&#x50CF;TCP&#x5EFA;&#x7ACB;&#x53EF;&#x9760;&#x8FDE;&#x63A5;&#x7684;&#x6A21;&#x578B;&#xFF0C;&#x5C3D;&#x7BA1;TCP&#x91C7;&#x7528;&#x4E86;3&#x6B21;&#x63E1;&#x624B;&#x6A21;&#x578B;&#xFF0C;&#x4F46;&#x5B9E;&#x9645;&#x4E0A;&#x5E76;&#x4E0D;&#x80FD;&#x4FDD;&#x8BC1;&#x5BF9;&#x6D88;&#x606F;&#x4E22;&#x5931;&#x8FDB;&#x884C;&#x4E86;&#x5BB9;&#x9519;&#xFF0C;&#x53EA;&#x80FD;&#x5728;&#x6982;&#x7387;&#x4E0A;&#x964D;&#x4F4E;&#x6D88;&#x606F;&#x4E22;&#x5931;&#x7684;&#x53EF;&#x80FD;&#x3002;</p>
 <p><img src="https://files.huadonghu.com/20200531/5WBNIR.jpg" alt=""></p>
-<p>&#x5173;&#x4E8E;&#x5982;&#x4F55;&#x5F00;&#x53D1;&#x53EF;&#x9760;&#x7684;&#x6D88;&#x606F;&#x4EA4;&#x4ED8;&#xFF0C;&#x6211;&#x4EEC;&#x4E0B;&#x6B21;&#x8BA8;&#x8BBA;&#x3002;&#x9884;&#x8BA1;&#x66F4;&#x65B0;&#x65F6;&#x95F4;6&#x6708;2&#x65E5;&#x3002;</p>
-<div style="width: 440;height:380px;float:left">
-<iframe width="440" height="370" src="https://154d5709.sibforms.com/serve/MUIEABYu83l4_lJjMKhDCLjdM0uAUQ2jIFE8E-lYTqFNtPflxw9z0CBre28UFJnB-3ZN2f_xF978Q1Oll_Q3j_RLcdIVbknbI1YOyrwWxSARSFHrkXL44UItbwPjDHaZGFRnQ-P9TcKnxvgwFgm4hTLhipwmbQl2H6R7iTvUqtRDWdp_o3jZQau0fSEwu3bmrw7ISEJ2SlE8gUMn" frameborder="0" scrolling="no" allowfullscreen style="display: block;margin-left: auto;margin-right: auto;max-width: 100%;"></iframe></div>
+
                                 
                                 </section>
                             
@@ -353,10 +366,14 @@
 
             
                 
-                <a href="safety-liveness.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page: 8. Safety 和 Liveness">
+                <a href="safety-liveness.html" class="navigation navigation-prev " aria-label="Previous page: 8. Safety 和 Liveness">
                     <i class="fa fa-angle-left"></i>
                 </a>
                 
+                
+                <a href="implementation-of-reliable-delivery.html" class="navigation navigation-next " aria-label="Next page: 10. 实现可靠消息交付">
+                    <i class="fa fa-angle-right"></i>
+                </a>
                 
             
         
@@ -365,7 +382,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"9. 可靠消息交付","level":"1.10","depth":1,"previous":{"title":"8. Safety 和 Liveness","level":"1.9","depth":1,"path":"safety-liveness.md","ref":"safety-liveness.md","articles":[]},"dir":"ltr"},"config":{"plugins":["disqus","ga"],"root":".","styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"pluginsConfig":{"disqus":{"useIdentifier":false,"shortName":"distributed-system"},"ga":{"configuration":"auto","token":"UA-131378726-6"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"theme":"default","author":"Huadong Hu","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"title":"分布式系统","language":"zh-hans","gitbook":"*","description":"分布式系统概述"},"file":{"path":"reliable-delivery.md","mtime":"2020-06-01T01:50:03.730Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-06-01T15:14:48.315Z"},"basePath":".","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"9. 可靠消息交付","level":"1.10","depth":1,"next":{"title":"10. 实现可靠消息交付","level":"1.11","depth":1,"path":"implementation-of-reliable-delivery.md","ref":"implementation-of-reliable-delivery.md","articles":[]},"previous":{"title":"8. Safety 和 Liveness","level":"1.9","depth":1,"path":"safety-liveness.md","ref":"safety-liveness.md","articles":[]},"dir":"ltr"},"config":{"plugins":["disqus","ga"],"root":".","styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"pluginsConfig":{"disqus":{"useIdentifier":false,"shortName":"distributed-system"},"ga":{"configuration":"auto","token":"UA-131378726-6"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"theme":"default","author":"Huadong Hu","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"title":"分布式系统","language":"zh-hans","gitbook":"*","description":"分布式系统概述"},"file":{"path":"reliable-delivery.md","mtime":"2020-06-03T03:16:03.137Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-06-03T03:17:44.216Z"},"basePath":".","book":{"language":""}});
         });
     </script>
 </div>
