@@ -61,6 +61,8 @@
     <link rel="shortcut icon" href="gitbook/images/favicon.ico" type="image/x-icon">
 
     
+    <link rel="next" href="replications-consistency.html" />
+    
     
     <link rel="prev" href="reliable-delivery.html" />
     
@@ -234,6 +236,19 @@
             
         </li>
     
+        <li class="chapter " data-level="1.12" data-path="replications-consistency.html">
+            
+                <a href="replications-consistency.html">
+            
+                    
+                    11. 冗余备份(Replications)与一致性(Consistency)
+            
+                </a>
+            
+
+            
+        </li>
+    
 
     
 
@@ -349,10 +364,9 @@
 </li>
 </ul>
 <p><img src="https://files.huadonghu.com/20200602/KQvQ3c.png" alt=""></p>
-<p>&#x6CE8;&#x610F;&#x5230;&#xFF0C;&#x4E0A;&#x8FF0;&#x7B97;&#x6CD5;&#x901A;&#x8FC7;&#x4E0D;&#x53D1;&#x9001;&#x6D88;&#x606F;&#x7ED9;&#x6D88;&#x606F;&#x6E90;&#x8FDB;&#x7A0B;&#xFF0C;&#x53EF;&#x4EE5;&#x51CF;&#x5C11;&#x4E00;&#x4E9B;&#x6D88;&#x606F;&#x91CF;&#x3002;</p>
+<p>&#x6CE8;&#x610F;&#x5230;&#xFF0C;&#x4E0A;&#x8FF0;&#x7B97;&#x6CD5;&#x901A;&#x8FC7;&#x53D1;&#x9001;&#x6D88;&#x606F;&#x7ED9;&#x6D88;&#x606F;&#x6E90;&#x8FDB;&#x7A0B;&#xFF0C;&#x53EF;&#x4EE5;&#x51CF;&#x5C11;&#x4E00;&#x4E9B;&#x6D88;&#x606F;&#x91CF;&#x3002;</p>
 <p>&#x6211;&#x4EEC;&#x53EF;&#x4EE5;&#x53D1;&#x73B0;&#x8981;&#x5B9E;&#x73B0;&#x53EF;&#x9760;&#x7684;&#x5E7F;&#x64AD;&#x91C7;&#x53D6;&#x7684;&#x65B9;&#x5F0F;&#x662F;&#x5BF9;&#x6D88;&#x606F;&#x8FDB;&#x884C;&#x5197;&#x4F59;&#x5907;&#x4EFD;&#x4ECE;&#x800C;&#x8FDB;&#x884C;&#x5BB9;&#x9519;&#x5904;&#x7406;&#xFF0C;&#x8FD9;&#x79CD;&#x601D;&#x8DEF;&#x5728;&#x5206;&#x5E03;&#x5F0F;&#x7CFB;&#x7EDF;&#x7684;&#x8BBE;&#x8BA1;&#x4E2D;&#x5F88;&#x5E38;&#x89C1;&#xFF0C;&#x4E0B;&#x4E00;&#x7BC7;&#x6587;&#x7AE0;&#x5C06;&#x4F1A;&#x4ECB;&#x7ECD;&#x8FD9;&#x79CD;&#x601D;&#x8DEF;&#x7684;&#x53E6;&#x4E00;&#x4E2A;&#x5E94;&#x7528;&#xFF1A;&#x5197;&#x4F59;&#x5907;&#x4EFD;&#x3002;</p>
-<div style="width: 440;height:380px;float:left">
-<iframe width="440" height="370" src="https://154d5709.sibforms.com/serve/MUIEABYu83l4_lJjMKhDCLjdM0uAUQ2jIFE8E-lYTqFNtPflxw9z0CBre28UFJnB-3ZN2f_xF978Q1Oll_Q3j_RLcdIVbknbI1YOyrwWxSARSFHrkXL44UItbwPjDHaZGFRnQ-P9TcKnxvgwFgm4hTLhipwmbQl2H6R7iTvUqtRDWdp_o3jZQau0fSEwu3bmrw7ISEJ2SlE8gUMn" frameborder="0" scrolling="no" allowfullscreen style="display: block;margin-left: auto;margin-right: auto;max-width: 100%;"></iframe></div>
+
                                 
                                 </section>
                             
@@ -379,10 +393,14 @@
 
             
                 
-                <a href="reliable-delivery.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page: 9. 可靠消息交付">
+                <a href="reliable-delivery.html" class="navigation navigation-prev " aria-label="Previous page: 9. 可靠消息交付">
                     <i class="fa fa-angle-left"></i>
                 </a>
                 
+                
+                <a href="replications-consistency.html" class="navigation navigation-next " aria-label="Next page: 11. 冗余备份(Replications)与一致性(Consistency)">
+                    <i class="fa fa-angle-right"></i>
+                </a>
                 
             
         
@@ -391,7 +409,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"10. 实现可靠消息交付","level":"1.11","depth":1,"previous":{"title":"9. 可靠消息交付","level":"1.10","depth":1,"path":"reliable-delivery.md","ref":"reliable-delivery.md","articles":[]},"dir":"ltr"},"config":{"plugins":["disqus","ga"],"root":".","styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"pluginsConfig":{"disqus":{"useIdentifier":false,"shortName":"distributed-system"},"ga":{"configuration":"auto","token":"UA-131378726-6"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"theme":"default","author":"Huadong Hu","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"title":"分布式系统","language":"zh-hans","gitbook":"*","description":"分布式系统概述"},"file":{"path":"implementation-of-reliable-delivery.md","mtime":"2020-06-03T03:17:21.538Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-06-03T03:17:44.216Z"},"basePath":".","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"10. 实现可靠消息交付","level":"1.11","depth":1,"next":{"title":"11. 冗余备份(Replications)与一致性(Consistency)","level":"1.12","depth":1,"path":"replications-consistency.md","ref":"replications-consistency.md","articles":[]},"previous":{"title":"9. 可靠消息交付","level":"1.10","depth":1,"path":"reliable-delivery.md","ref":"reliable-delivery.md","articles":[]},"dir":"ltr"},"config":{"plugins":["disqus","ga"],"root":".","styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"pluginsConfig":{"disqus":{"useIdentifier":false,"shortName":"distributed-system"},"ga":{"configuration":"auto","token":"UA-131378726-6"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"theme":"default","author":"Huadong Hu","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"title":"分布式系统","language":"zh-hans","gitbook":"*","description":"分布式系统概述"},"file":{"path":"implementation-of-reliable-delivery.md","mtime":"2020-06-04T03:18:42.093Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-06-04T03:19:29.682Z"},"basePath":".","book":{"language":""}});
         });
     </script>
 </div>
