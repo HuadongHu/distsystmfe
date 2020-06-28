@@ -294,6 +294,19 @@
             
         </li>
     
+        <li class="chapter " data-level="1.14" data-path="../eventual-consistency.html">
+            
+                <a href="../eventual-consistency.html">
+            
+                    
+                    13. 最终一致性(eventual consistency)
+            
+                </a>
+            
+
+            
+        </li>
+    
 
     
 
@@ -341,7 +354,7 @@
                                 
                                 <h1 id="&#x5206;&#x5E03;&#x5F0F;&#x5171;&#x8BC6;&#x7B97;&#x6CD5;-paxos">&#x5206;&#x5E03;&#x5F0F;&#x5171;&#x8BC6;&#x7B97;&#x6CD5;-Paxos</h1>
 <p>Paxos&#x662F;&#x6700;&#x8457;&#x540D;&#x7684;&#x5206;&#x5E03;&#x5F0F;&#x5171;&#x8BC6;&#x7B97;&#x6CD5;&#x4E4B;&#x4E00;&#x3002;&#x8FD9;&#x91CC;&#x4ECB;&#x7ECD;&#x4E00;&#x4E0B;&#x8FD9;&#x4E2A;&#x7B97;&#x6CD5;&#x3002;</p>
-<h3 id="paxos&#x7684;&#x89D2;&#x8272;">Paxos&#x7684;&#x89D2;&#x8272;</h3>
+<h2 id="paxos&#x7684;&#x89D2;&#x8272;">Paxos&#x7684;&#x89D2;&#x8272;</h2>
 <ul>
 <li>Proposer&#xFF0C;&#x63D0;&#x8BAE;&#x8005; - &#x53D1;&#x8D77;&#x63D0;&#x8BAE;</li>
 <li>Acceptor&#xFF0C;&#x63A5;&#x53D7;&#x8005;&#xFF0C;&#x5BF9;&#x4E8E;Proposer&#x63D0;&#x8BAE;&#x7684;Value&#x4F5C;&#x51FA;&#x51B3;&#x5B9A;&#x3002;</li>
@@ -350,7 +363,7 @@
 <p>&#x5F53;&#x6211;&#x4EEC;&#x4F7F;&#x7528;Lamport Diagram&#x6765;&#x8868;&#x73B0;Paxos&#x7684;&#x65F6;&#x5019;&#xFF0C;&#x4E3A;&#x4E86;&#x7406;&#x89E3;&#x65B9;&#x4FBF;&#xFF0C;&#x6211;&#x4EEC;&#x9700;&#x8981;&#x5C06;&#x4E0A;&#x9762;&#x7684;&#x4E09;&#x79CD;&#x89D2;&#x8272;&#x5206;&#x5F00;&#x6765;&#x7528;&#x4E0D;&#x540C;&#x7684;&#x8FDB;&#x7A0B;&#x8868;&#x793A;&#xFF0C;&#x4F46;&#x662F;&#x5B9E;&#x9645;&#x8FD0;&#x884C;&#x4E2D;&#x4E00;&#x4E2A;&#x8FDB;&#x7A0B;&#x53EF;&#x4EE5;&#x626E;&#x6F14;&#x591A;&#x4E2A;&#x89D2;&#x8272;&#x3002;</p>
 <p>&#x4E00;&#x4E2A;&#x95EE;&#x9898;&#x662F;Paxos&#x7684;&#x8282;&#x70B9;&#x662F;&#x9700;&#x8981;&#x63D0;&#x524D;&#x77E5;&#x9053;&#x6709;&#x591A;&#x5C11;&#x4E2A;Accpetor&#x7684;&#xFF0C;&#x56E0;&#x4E3A;&#x8981;&#x8FBE;&#x6210;&#x4E00;&#x81F4;&#xFF0C;&#x9700;&#x8981;&#x77E5;&#x9053;&#x6709;&#x5927;&#x4E8E;&#x7B49;&#x4E8E;&#x4E00;&#x534A;&#x7684;Acppetor&#x540C;&#x610F;&#x3002;</p>
 <p>&#x5728;&#x4ECB;&#x7ECD;&#x5177;&#x4F53;&#x7B97;&#x6CD5;&#x524D;&#xFF0C;&#x8FD9;&#x91CC;&#x5148;&#x6F84;&#x6E05;&#x4E0B;&#xFF0C;&#x6211;&#x4EEC;&#x63A5;&#x4E0B;&#x6765;&#x5148;&#x8BA8;&#x8BBA;&#x7684;&#x662F;&#x5BF9;&#x5355;&#x4E2A;&#x503C;&#x8FBE;&#x6210;&#x5171;&#x8BC6;&#xFF0C;&#x800C;&#x5BF9;&#x4E8E;&#x4E00;&#x7CFB;&#x5217;&#x7684;&#x503C;&#x8FBE;&#x6210;&#x5171;&#x8BC6;&#x4F1A;&#x5728;&#x66F4;&#x540E;&#x9762;&#x8FDB;&#x884C;&#x4ECB;&#x7ECD;&#x3002;</p>
-<h3 id="&#x7B97;&#x6CD5;&#x8FD0;&#x884C;">&#x7B97;&#x6CD5;&#x8FD0;&#x884C;</h3>
+<h2 id="&#x7B97;&#x6CD5;&#x8FD0;&#x884C;">&#x7B97;&#x6CD5;&#x8FD0;&#x884C;</h2>
 <p>&#x5047;&#x8BBE;&#x67D0;&#x4E00;&#x65F6;&#x523B;&#x4E00;&#x4E2A;Proposer, P1&#xFF0C;&#x60F3;&#x8981;&#x63D0;&#x8BAE;&#x4E00;&#x4E2A;&#x503C;&#xFF0C;&#x9996;&#x5148;&#x5B83;&#x9700;&#x8981;&#x505A;&#x7684;&#x662F;&#x53D1;&#x9001;&#x4E00;&#x6761;Prepare&#x6D88;&#x606F;&#x5230;&#x81F3;&#x5C11;&#x4F17;&#x6570;&#x7684;Accpetor&#x90A3;&#x91CC;&#x3002;</p>
 <p><img src="https://files.huadonghu.com/20200615/O8oSlz.png?xa" alt=""></p>
 <p>&#x53D1;&#x9001;&#x7684;Prepare&#x6D88;&#x606F;&#x7684;&#x540C;&#x65F6;&#x9700;&#x8981;&#x643A;&#x5E26;&#x4E0A;&#x552F;&#x4E00;&#x7684;&#x63D0;&#x8BAE;&#x53F7;&#xFF0C;Proposal Number&#x3002;&#x8FD9;&#x4E2A;Proposal Number&#x9700;&#x8981;&#x65F6;&#x5168;&#x5C40;&#x552F;&#x4E00;&#x7684;&#xFF0C;&#x4E5F;&#x5C31;&#x662F;&#x8BF4;&#x4E00;&#x65E6;&#x4E00;&#x4E2A;Proposer&#x4F7F;&#x7528;&#x8FC7;&#x4E86;&#x8FD9;&#x4E2A;&#x63D0;&#x8BAE;&#x53F7;&#xFF0C;&#x90A3;&#x4E48;&#x5176;&#x4ED6;&#x7684;Proposal&#x5C31;&#x4E0D;&#x80FD;&#x518D;&#x4F7F;&#x7528;&#x3002;&#x6240;&#x4EE5;&#x5982;&#x679C;&#x6709;&#x4E24;&#x4E2A;Proposer&#xFF0C;&#x4E00;&#x4E2A;&#x7B80;&#x5355;&#x7684;&#x65B9;&#x5F0F;&#x5C31;&#x662F;&#x5206;&#x522B;&#x4F7F;&#x7528;&#x5947;&#x5076;&#x4E0D;&#x540C;&#x7684;Proposal Number&#x3002;</p>
@@ -384,7 +397,7 @@
 <p>&#x7B2C;&#x4E8C;&#x4E2A;&#x91CC;&#x7A0B;&#x7891;&#x662F;&#x5171;&#x8BC6;&#x8FBE;&#x6210;&#x7684;&#x65F6;&#x5019;&#xFF0C;&#x4E5F;&#x5C31;&#x662F;&#x5F53;&#x4F17;&#x6570;&#x4E2A;acceptor&#x53D1;&#x9001;&#x4E86;&#x5BF9;&#x4E00;&#x4E2A;&#x63D0;&#x8BAE;&#x53F7;accepted&#x6D88;&#x606F;&#x7684;&#x65F6;&#x5019;&#x3002;&#x5C3D;&#x7BA1;&#x6B64;&#x65F6;&#x5404;&#x4E2A;&#x8282;&#x70B9;&#x5E76;&#x4E0D;&#x77E5;&#x9053;&#x5171;&#x8BC6;&#x5DF2;&#x7ECF;&#x8FBE;&#x6210;&#x3002;</p>
 <p>&#x7B2C;&#x4E09;&#x4E2A;&#x91CC;&#x7A0B;&#x7891;&#x662F;&#x5F53;Proposer&#x6216;&#x8005;Leaner&#x4ECE;&#x4F17;&#x6570;&#x4E2A;acceptor&#x63A5;&#x6536;&#x5230;accepted&#x6D88;&#x606F;&#x7684;&#x65F6;&#x5019;&#xFF0C;&#x4E5F;&#x662F;&#x8FD9;&#x4E2A;&#x65F6;&#x5019;&#x4ED6;&#x4EEC;&#x77E5;&#x9053;&#x7CFB;&#x7EDF;&#x5DF2;&#x7ECF;&#x8FBE;&#x6210;&#x4E86;&#x5171;&#x8BC6;&#x3002;</p>
 <p>&#x4E0A;&#x9762;&#x5C31;&#x662F;&#x7B80;&#x5355;&#x7248;&#x7684;Paxos&#x8FD0;&#x884C;&#x8FC7;&#x7A0B;&#xFF0C;&#x4E0B;&#x9762;&#x6211;&#x4EEC;&#x628A;Paxos&#x7B97;&#x6CD5;&#x7684;&#x6B65;&#x9AA4;&#x8BE6;&#x7EC6;&#x5730;&#x63CF;&#x8FF0;&#x4E00;&#x4E0B;&#x3002;</p>
-<h3 id="&#x7B97;&#x6CD5;&#x6D41;&#x7A0B;">&#x7B97;&#x6CD5;&#x6D41;&#x7A0B;</h3>
+<h2 id="&#x7B97;&#x6CD5;&#x6D41;&#x7A0B;">&#x7B97;&#x6CD5;&#x6D41;&#x7A0B;</h2>
 <p>&#x6211;&#x4EEC;&#x4ECE;&#x4E0A;&#x9762;&#x7684;&#x7B80;&#x5355;&#x7248;&#x672C;Paxos&#x7684;&#x8FD0;&#x884C;&#x8FC7;&#x7A0B;&#xFF0C;&#x53EF;&#x4EE5;&#x5F97;&#x51FA;&#x4E00;&#x4E2A;&#x521D;&#x6B65;&#x7684;&#x7B97;&#x6CD5;&#x6D41;&#x7A0B;&#xFF1A;</p>
 <p>1&#xFF0C;Proposer</p>
 <p>&#x53D1;&#x9001;Prepare(n)&#x6D88;&#x606F;&#x7ED9;&#x4F17;&#x6570;&#x4E2A;acceptors&#xFF0C;n&#x5FC5;&#x987B;&#x6EE1;&#x8DB3;</p>
@@ -476,8 +489,8 @@
 </ul>
 </li>
 </ul>
-<p>3&#xFF0C;Proposer </p>
-<p>&#x5F53;Proposer&#x63A5;&#x6536;&#x5230;&#x6765;&#x81EA;&#x4F17;&#x6570;&#x8282;&#x70B9;&#x7684;&#x5BF9;&#x63D0;&#x8BAE;&#x53F7;n&#x7684;Promise&#x6D88;&#x606F;&#x540E;&#xFF0C;&#x53D1;&#x9001;Accept(n, val)&#x7ED9;Acceptor&#xFF0C;n&#x662F;&#x63D0;&#x8BAE;&#x53F7;&#xFF0C;val&#x662F;: </p>
+<p>3&#xFF0C;Proposer</p>
+<p>&#x5F53;Proposer&#x63A5;&#x6536;&#x5230;&#x6765;&#x81EA;&#x4F17;&#x6570;&#x8282;&#x70B9;&#x7684;&#x5BF9;&#x63D0;&#x8BAE;&#x53F7;n&#x7684;Promise&#x6D88;&#x606F;&#x540E;&#xFF0C;&#x53D1;&#x9001;Accept(n, val)&#x7ED9;Acceptor&#xFF0C;n&#x662F;&#x63D0;&#x8BAE;&#x53F7;&#xFF0C;val&#x662F;:</p>
 <ul>
 <li>&#x5982;&#x679C;Proposer&#x63A5;&#x6536;&#x5230;&#x4EFB;&#x4F55;&#x7684;Promise(n, (prevN, prevVal))&#xFF0C;&#x5B83;&#x5FC5;&#x987B;&#x4ECE;&#x4E2D;&#x9009;&#x51FA;&#x5177;&#x6709;&#x6700;&#x5927;preV&#x7684;prevVal&#x3002; </li>
 <li>&#x5426;&#x5219;&#xFF0C;Proposer&#x53EF;&#x4EE5;&#x8BBE;&#x7F6E;&#x4EFB;&#x610F;&#x7684;val&#x3002;</li>
@@ -488,7 +501,7 @@
 <li>&#x5982;&#x679C;Yes&#xFF0C;&#x5219;&#x4E22;&#x5F03;&#x8FD9;&#x6761;&#x6D88;&#x606F;</li>
 <li>&#x5982;&#x679C;NO&#xFF0C;&#x5219;&#x56DE;&#x590D;Accepted(n, val)&#x6D88;&#x606F;&#x7ED9;Proposer&#xFF0C;&#x540C;&#x65F6;&#x5C06;Accepted(n, val)&#x53D1;&#x9001;&#x7ED9;&#x6240;&#x6709;&#x7684;Learner&#x8282;&#x70B9;&#x3002;</li>
 </ul>
-<h3 id="&#x7B97;&#x6CD5;&#x5206;&#x6790;">&#x7B97;&#x6CD5;&#x5206;&#x6790;</h3>
+<h2 id="&#x7B97;&#x6CD5;&#x5206;&#x6790;">&#x7B97;&#x6CD5;&#x5206;&#x6790;</h2>
 <p>&#x4E0A;&#x4E00;&#x7BC7;&#x63D0;&#x5230;&#x8FC7;&#x5171;&#x8BC6;&#x7B97;&#x6CD5;&#x7684;&#x4E09;&#x4E2A;&#x7279;&#x6027;&#xFF1A;</p>
 <ol>
 <li>&#x7EC8;&#x6B62;(Termination): &#x6240;&#x6709;&#x7684;&#x6B63;&#x786E;&#x7684;&#x8FDB;&#x7A0B;&#x6700;&#x7EC8;&#x4F1A;&#x51B3;&#x5B9A;&#x597D;&#x4E00;&#x4E2A;&#x503C;&#x3002;</li>
@@ -499,7 +512,7 @@
 <p>&#x4F60;&#x53EF;&#x80FD;&#x4F1A;&#x95EE;&#x4E86;&#xFF0C;&#x65E2;&#x7136;&#x591A;&#x4E2A;Proposer&#x4E92;&#x76F8;&#x7ADE;&#x4E89;&#x5BFC;&#x81F4;&#x7B97;&#x6CD5;&#x4E0D;&#x80FD;&#x7EC8;&#x6B62;&#xFF0C;&#x90A3;&#x4E3A;&#x4EC0;&#x4E48;&#x6211;&#x4EEC;&#x53EA;&#x5141;&#x8BB8;&#x4E00;&#x4E2A;Proposer&#x5462;&#xFF1F;</p>
 <p>&#x4E00;&#x4E2A;&#x539F;&#x56E0;&#x662F;&#x5BB9;&#x9519;&#xFF0C;&#x5355;&#x70B9;&#x6A21;&#x578B;&#x4E0D;&#x5229;&#x4E8E;&#x5BB9;&#x9519;&#xFF0C;&#x8FD9;&#x4E2A;&#x5F88;&#x5BB9;&#x6613;&#x7406;&#x89E3;&#x3002;&#x53E6;&#x4E00;&#x4E2A;&#x91CD;&#x8981;&#x7684;&#x539F;&#x56E0;&#x662F;&#xFF0C;&#x5982;&#x679C;&#x4E00;&#x4E2A;Proposer&#x7EC8;&#x6B62;&#x8FD0;&#x884C;&#x4E86;&#xFF0C; &#x90A3;&#x4E48;&#x5C31;&#x8981;&#x91CD;&#x65B0;&#x9009;&#x4E3E;&#x51FA;&#x4E00;&#x4E2A;Proposer&#xFF0C;&#x800C;&#x9009;&#x4E3E;&#x7B97;&#x6CD5;&#x7528;&#x7684;&#x53C8;&#x662F;Paxos&#xFF0C;ummm&#x3002;&#x6240;&#x4EE5;&#x6211;&#x4EEC;&#x4E0D;&#x80FD;&#x53EA;&#x5141;&#x8BB8;&#x4E00;&#x4E2A;Proposer&#x5B58;&#x5728;&#x56E0;&#x4E3A;&#x8FD9;&#x6837;&#x7684;&#x5171;&#x8BC6;&#x7B97;&#x6CD5;&#x4F1A;&#x53D8;&#x6210;&#x4F9D;&#x8D56;&#x4E8E;&#x5171;&#x8BC6;&#x7B97;&#x6CD5;&#x3002;</p>
 <p>&#x5176;&#x5B9E;&#x4E5F;&#x6709;&#x5176;&#x4ED6;&#x5171;&#x8BC6;&#x7B97;&#x6CD5;&#x4F1A;&#x5C06;Leader&#x9009;&#x4E3E;&#x4F5C;&#x4E3A;&#x7B97;&#x6CD5;&#x7684;&#x4E00;&#x4E2A;&#x9636;&#x6BB5;&#xFF0C;&#x6BD4;&#x5982;Raft&#xFF0C;&#x8FD9;&#x4E2A;&#x540E;&#x9762;&#x4F1A;&#x505A;&#x4ECB;&#x7ECD;&#x3002;</p>
-<h3 id="multipaxos">MultiPaxos</h3>
+<h2 id="multipaxos">MultiPaxos</h2>
 <p>&#x6211;&#x4EEC;&#x4E4B;&#x524D;&#x90FD;&#x5728;&#x8C08;&#x8BBA;&#x5982;&#x4F55;&#x5728;&#x5355;&#x4E2A;&#x503C;&#x4E0A;&#x9762;&#x8FBE;&#x6210;&#x5171;&#x8BC6;&#xFF0C;&#x4F46;&#x5B9E;&#x9645;&#x5E94;&#x7528;&#x4E2D;&#xFF0C;&#x66F4;&#x591A;&#x7684;&#x662F;&#x5BF9;&#x591A;&#x4E2A;&#x503C;&#xFF0C;&#x6216;&#x8005;&#x8BF4;&#x662F;&#x4E00;&#x8FDE;&#x4E32;&#x7684;&#x503C;&#x8FBE;&#x6210;&#x5171;&#x8BC6;&#x3002;</p>
 <p>&#x6BD4;&#x5982;&#x4E4B;&#x524D;&#x63D0;&#x5230;&#x7684;&#x5168;&#x5E8F;&#x5E7F;&#x64AD;(Totally Ordered BroadCast)&#xFF0C;&#x5176;&#x4E2D;&#x7684;&#x4E00;&#x4E2A;&#x95EE;&#x9898;&#x662F;&#x5982;&#x4F55;&#x4FDD;&#x8BC1;&#x6BCF;&#x4E2A;&#x8FDB;&#x7A0B;&#x4F1A;&#x6309;&#x7167;&#x4E00;&#x6837;&#x7684;&#x987A;&#x5E8F;&#x8FDB;&#x884C;&#x6D88;&#x606F;&#x4EA4;&#x4ED8;&#xFF0C;&#x8FD9;&#x5C31;&#x662F;&#x5BF9;&#x4E00;&#x7CFB;&#x5217;&#x503C;&#x8FBE;&#x6210;&#x5171;&#x8BC6;&#x7684;&#x4F8B;&#x5B50;&#x3002;</p>
 <p>&#x53EF;&#x80FD;&#x6709;&#x540C;&#x5B66;&#x4F1A;&#x60F3;&#xFF0C;&#x53EF;&#x4E0D;&#x53EF;&#x4EE5;&#x591A;&#x6B21;&#x6267;&#x884C;&#x5355;&#x503C;&#x7684;Paxos&#x7B97;&#x6CD5;&#x53BB;&#x5B9E;&#x73B0;&#x591A;&#x503C;&#x7684;&#x5171;&#x8BC6;&#x5462;&#xFF1F;&#x6211;&#x4EEC;&#x53D1;&#x73B0;Paxos&#x8FBE;&#x6210;&#x5171;&#x8BC6;&#x9700;&#x8981;&#x53D1;&#x9001;&#x5927;&#x91CF;&#x7684;&#x7F51;&#x7EDC;&#x6D88;&#x606F;&#xFF0C;&#x5982;&#x679C;&#x591A;&#x6B21;&#x8FD0;&#x884C;Paxos&#x5FC5;&#x7136;&#x4F1A;&#x5BFC;&#x81F4;&#x6548;&#x7387;&#x7684;&#x4F4E;&#x4E0B;&#x3002;</p>
@@ -508,7 +521,7 @@
 <p>&#x5B9E;&#x9645;&#x4E0A;&#x5728;M1&#x9636;&#x6BB5;&#x540E;&#xFF0C;&#x6709;&#x4F17;&#x6570;&#x4E2A;Acceptors&#x505A;&#x51FA;&#x4E86;&#x627F;&#x8BFA;&#xFF0C;&#x6211;&#x4EEC;&#x5B8C;&#x5168;&#x53EF;&#x4EE5;&#x4E00;&#x76F4;&#x8FDB;&#x884C;accept()&#x548C;accepted()&#x64CD;&#x4F5C;&#xFF0C;&#x76F4;&#x5230;&#x5355;&#x4E2A;&#x7684;Proposer&#x5D29;&#x6E83;&#x4E86;&#x3002;</p>
 <p><img src="https://files.huadonghu.com/20200627/4aMPRy.png" alt=""></p>
 <p>&#x4E0A;&#x9762;&#x7684;&#x5C31;&#x662F;MultiPaxos&#xFF0C;&#x4E0A;&#x9762;&#x7684;&#x64CD;&#x4F5C;&#x662F;&#x5B89;&#x5168;&#x7684;&#x5982;&#x679C;P1&#x4E00;&#x76F4;&#x6CA1;&#x6709;&#x5D29;&#x6E83;&#x7684;&#x8BDD;&#x3002;&#x4F46;&#x662F;&#x5982;&#x679C;&#x5176;&#x4ED6;&#x7684;Proposer&#x51FA;&#x73B0;&#x4E86;&#x5462;&#xFF1F;&#x5176;&#x5B9E;&#x4E0D;&#x5F71;&#x54CD;&#xFF0C;&#x5982;&#x679C;&#x65B0;&#x51FA;&#x73B0;&#x7684;Proposer P2&#x53D1;&#x9001;&#x4E86;Prepare(6)&#xFF0C;&#x90A3;&#x4E48;P1&#x7684;&#x540E;&#x7EED;&#x6D88;&#x606F;&#x4E5F;&#x5C31;&#x88AB;&#x4E22;&#x5F03;&#x4E86;&#xFF0C;&#x6B64;&#x65F6;&#x53C8;&#x964D;&#x7EA7;&#x5230;&#x4E86;&#x666E;&#x901A;&#x7684;Paxos&#xFF0C;&#x4F46;&#x5176;&#x5B9E;&#x8FD9;&#x6837;&#x7684;&#x60C5;&#x51B5;&#x5F88;&#x5C11;&#x53D1;&#x751F;&#x3002;</p>
-<h3 id="&#x5BB9;&#x9519;">&#x5BB9;&#x9519;</h3>
+<h2 id="&#x5BB9;&#x9519;">&#x5BB9;&#x9519;</h2>
 <p>&#x6700;&#x591A;&#x591A;&#x5C11;&#x7684;acceptors&#x5D29;&#x6E83;&#x540E;&#x7CFB;&#x7EDF;&#x80FD;&#x591F;&#x7EE7;&#x7EED;&#x6B63;&#x5E38;&#x8FD0;&#x884C;&#xFF1F;</p>
 <p>&#x5982;&#x679C;f&#x662F;&#x4F60;&#x5E0C;&#x671B;&#x5BB9;&#x5FCD;&#x7684;acceptors&#x5931;&#x8D25;&#xFF0C;&#x90A3;&#x4E48;&#x5C31;&#x9700;&#x8981;2f+1&#x4E2A;acceptors.</p>
 <p>&#x6700;&#x591A;&#x591A;&#x5C11;&#x7684;Proposers&#x5D29;&#x6E83;&#x540E;&#x7CFB;&#x7EDF;&#x80FD;&#x591F;&#x7EE7;&#x7EED;&#x6B63;&#x5E38;&#x8FD0;&#x884C;&#xFF1F;</p>
@@ -556,7 +569,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"分布式共识算法-Paxos","level":"1.13.1","depth":2,"next":{"title":"分布式共识算法-Raft","level":"1.13.2","depth":2,"path":"consensus/raft.md","ref":"consensus/raft.md","articles":[]},"previous":{"title":"12. 分布式共识算法","level":"1.13","depth":1,"path":"consensus/README.md","ref":"consensus/README.md","articles":[{"title":"分布式共识算法-Paxos","level":"1.13.1","depth":2,"path":"consensus/paxos.md","ref":"consensus/paxos.md","articles":[]},{"title":"分布式共识算法-Raft","level":"1.13.2","depth":2,"path":"consensus/raft.md","ref":"consensus/raft.md","articles":[]}]},"dir":"ltr"},"config":{"plugins":["disqus","ga"],"root":".","styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"pluginsConfig":{"disqus":{"useIdentifier":false,"shortName":"distributed-system"},"ga":{"configuration":"auto","token":"UA-131378726-6"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"theme":"default","author":"Huadong Hu","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"title":"分布式系统","language":"zh-hans","gitbook":"*","description":"分布式系统概述"},"file":{"path":"consensus/paxos.md","mtime":"2020-06-28T01:40:12.385Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-06-28T01:40:15.275Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"分布式共识算法-Paxos","level":"1.13.1","depth":2,"next":{"title":"分布式共识算法-Raft","level":"1.13.2","depth":2,"path":"consensus/raft.md","ref":"consensus/raft.md","articles":[]},"previous":{"title":"12. 分布式共识算法","level":"1.13","depth":1,"path":"consensus/README.md","ref":"consensus/README.md","articles":[{"title":"分布式共识算法-Paxos","level":"1.13.1","depth":2,"path":"consensus/paxos.md","ref":"consensus/paxos.md","articles":[]},{"title":"分布式共识算法-Raft","level":"1.13.2","depth":2,"path":"consensus/raft.md","ref":"consensus/raft.md","articles":[]}]},"dir":"ltr"},"config":{"plugins":["disqus","ga"],"root":".","styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"pluginsConfig":{"disqus":{"useIdentifier":false,"shortName":"distributed-system"},"ga":{"configuration":"auto","token":"UA-131378726-6"},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"theme":"default","author":"Huadong Hu","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"title":"分布式系统","language":"zh-hans","gitbook":"*","description":"分布式系统概述"},"file":{"path":"consensus/paxos.md","mtime":"2020-06-28T01:52:08.690Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2020-06-28T01:53:13.317Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>
