@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en" dir=>
+
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="6. 消息交付(Message Delivery) #  消息交付(Message Delivery)
+消息交付和消息的接收(Receiving)，发送(Sending)在于
+ 我们可以控制消息的发送，比如控制发送的频率 消息的接收对于我们来说是一个事件，一条消息已经传送到了我们的网络设备上 消息的交付也是我们可以控制的，比如消息经由网络传输到我们进程后，我们可以决定先放队列里不处理。  消息的交付是由应用程序决定的，有时消息接收后不会立即处理，会被放在队列里面，想想看为什么会这么做呢？其中一个原因可能是服务繁忙，消息太多不能及时处理，所以放到队列里。另外还有原因可能是消息接收后是无序的，所以需要放队列里等无序的消息到齐了再有序地交付。
+那会有哪些有序消息交付呢？
+FIFO #  FIFO就是First in, first out。相信这个原则大家都不陌生。但是这里还是给出严格的定义
+如果一个进程先发送的消息m1, 后发送的m2，那么，所有的消息接收进程都应该先交付m1,后交付m2。
+我们看下下面的这个例子，图中表示的分别是P1进程的消息发送事件和P2的消息交付事件。
+显然, P2进程应该先交付m1,后交付m2，这里就违背了FIFO。(FIFO violation)
+我们可以认为m1和m2塞到了一根管道里面，出来的时候应该是m1后m2。
+从上面的FIFO violation可以看出设计一个队列将消息缓存起来保证消息的有序交付还是很有必要的。
+对于分布式系统来说，一般也没必要去设计一个FIFO的消息交付，比如我们可以使用TCP进行传输，TCP是可以保证消息的有序性的。
+保证因果交付(Causal Delivery) #  前面数篇文章都在谈论因果，因果是是指事件发生的先后顺序。对于消息发送事件，如果m1的发送happens before m2，那么m1的交付事件也应该happens before m2。
+我们再看下这个例子：
+很明显，m1 happens before m2，但是交付的时候m2 happens before m1，这是违背了Causal Delivery原则的。
+上面的例子其实就是第一个违背FIFO Delivery原则的例子，我们可以看出如果违背了FIFO Delivery，也必然违背了Causal Delivery。这是因为，根据happens before的定义，如果同一个进程里m1在m2之前发生，则m1 happens before m2。这正符合FIFO中发送消息的要求。
+违背了FIFO Delivery必然违背Causal Delivery，那反过来呢？如果违背了Causal Delivery，是否一定违背了FIFO Delivery呢？
+我们看一个之前章节看过的例子：
+根据我们之前学习，Bob发送“讨厌你“给Carol是发生在Alice发送“Bob很蠢&quot;之后的，但是Carol进程的消息交付却是先交付了“讨厌你“，很明显，上面的例子违背了Causal Delivery。
+上面的例子违背了FIFO delivery么？
+答案是没有违背。 有同学可能会问，Bob发送“讨厌你“事件 和 Alice发送“Bob很蠢&quot; 事件，消息交付顺序错了。这是违背了Causal Delivery。我们回头看FIFO Delivery，其要求是“同一进程“内的消息交付有序性。">
+<meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="6. 消息交付(Message Delivery)" />
+<meta property="og:description" content="6. 消息交付(Message Delivery) #  消息交付(Message Delivery)
+消息交付和消息的接收(Receiving)，发送(Sending)在于
+ 我们可以控制消息的发送，比如控制发送的频率 消息的接收对于我们来说是一个事件，一条消息已经传送到了我们的网络设备上 消息的交付也是我们可以控制的，比如消息经由网络传输到我们进程后，我们可以决定先放队列里不处理。  消息的交付是由应用程序决定的，有时消息接收后不会立即处理，会被放在队列里面，想想看为什么会这么做呢？其中一个原因可能是服务繁忙，消息太多不能及时处理，所以放到队列里。另外还有原因可能是消息接收后是无序的，所以需要放队列里等无序的消息到齐了再有序地交付。
+那会有哪些有序消息交付呢？
+FIFO #  FIFO就是First in, first out。相信这个原则大家都不陌生。但是这里还是给出严格的定义
+如果一个进程先发送的消息m1, 后发送的m2，那么，所有的消息接收进程都应该先交付m1,后交付m2。
+我们看下下面的这个例子，图中表示的分别是P1进程的消息发送事件和P2的消息交付事件。
+显然, P2进程应该先交付m1,后交付m2，这里就违背了FIFO。(FIFO violation)
+我们可以认为m1和m2塞到了一根管道里面，出来的时候应该是m1后m2。
+从上面的FIFO violation可以看出设计一个队列将消息缓存起来保证消息的有序交付还是很有必要的。
+对于分布式系统来说，一般也没必要去设计一个FIFO的消息交付，比如我们可以使用TCP进行传输，TCP是可以保证消息的有序性的。
+保证因果交付(Causal Delivery) #  前面数篇文章都在谈论因果，因果是是指事件发生的先后顺序。对于消息发送事件，如果m1的发送happens before m2，那么m1的交付事件也应该happens before m2。
+我们再看下这个例子：
+很明显，m1 happens before m2，但是交付的时候m2 happens before m1，这是违背了Causal Delivery原则的。
+上面的例子其实就是第一个违背FIFO Delivery原则的例子，我们可以看出如果违背了FIFO Delivery，也必然违背了Causal Delivery。这是因为，根据happens before的定义，如果同一个进程里m1在m2之前发生，则m1 happens before m2。这正符合FIFO中发送消息的要求。
+违背了FIFO Delivery必然违背Causal Delivery，那反过来呢？如果违背了Causal Delivery，是否一定违背了FIFO Delivery呢？
+我们看一个之前章节看过的例子：
+根据我们之前学习，Bob发送“讨厌你“给Carol是发生在Alice发送“Bob很蠢&quot;之后的，但是Carol进程的消息交付却是先交付了“讨厌你“，很明显，上面的例子违背了Causal Delivery。
+上面的例子违背了FIFO delivery么？
+答案是没有违背。 有同学可能会问，Bob发送“讨厌你“事件 和 Alice发送“Bob很蠢&quot; 事件，消息交付顺序错了。这是违背了Causal Delivery。我们回头看FIFO Delivery，其要求是“同一进程“内的消息交付有序性。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://distsystms.huadonghu.com/docs/message-delivery/" />
+<meta property="article:published_time" content="2020-09-06T23:58:20-07:00" />
+<meta property="article:modified_time" content="2020-09-06T23:58:20-07:00" />
+<title>6. 消息交付(Message Delivery) | 分布式系统概述</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/favicon.png" type="image/x-icon">
+<link rel="stylesheet" href="/book.min.891c5b58a7a694942d519238f3c4138504c9ad2e207c0fd6541f9cd4f8d6220a.css" integrity="sha256-iRxbWKemlJQtUZI488QThQTJrS4gfA/WVB&#43;c1PjWIgo=">
+<script defer src="/en.search.min.a11bce14b45c5aff67fd7c1055386de7bc7645033a9f7998b8d0fab98cc3a8e7.js" integrity="sha256-oRvOFLRcWv9n/XwQVTht57x2RQM6n3mYuND6uYzDqOc="></script>
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-131378726-6', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+  
+</head>
+
+<body dir=>
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      
+  <nav>
+<h2 class="book-brand">
+  <a href="/"><span>分布式系统概述</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/case-study-amazons-dynamodb/" class="">14. Case study: Amazon&#39;s DynamoDB</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/eventual-consistency/" class="">13. 最终一致性(eventual consistency)，CAP理论</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/replications-and-consistency/" class="">11. 冗余备份(Replications)与一致性(Consistency)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/implementation-of-reliable-delivery/" class="">10. 实现可靠消息交付</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/reliable-delivery/" class="">9. 可靠消息交付</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/safety-liveness/" class="">8. Safety 和 Liveness</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/chandylamport-snapshot-algorithm/" class="">7. Chandy-Lamport快照(Snapshot)算法</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/consensus/" class="">12. 分布式共识算法</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/message-delivery/" class=" active">6. 消息交付(Message Delivery)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/raft/" class="">分布式共识算法-Raft</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/protocol-lamport-diagram/" class="">5. 网络协议(Protocol)与Lamport diagram</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/vector-clock/" class="">4. 向量时钟(Vector Clock)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/lamport-clocks/" class="">3. Lamport时钟(Lamport clocks)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/lamport-diagrams-happensbefore-partial-order/" class="">2. Lamport Diagrams，Happens-before，同步网络与异步网络，偏序关系</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/distributed-systems-what-and-why-time-and-clocks/" class="">1. 什么是和为什么分布式系统？时间和时钟。</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/paxos/" class="">分布式共识算法-Paxos</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var menu=document.querySelector("aside.book-menu nav");addEventListener("beforeunload",function(event){localStorage.setItem("menu.scrollTop",menu.scrollTop);});menu.scrollTop=localStorage.getItem("menu.scrollTop");})();</script>
+
+
+ 
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <strong>6. 消息交付(Message Delivery)</strong>
+
+  <label for="toc-control">
+    
+    <img src="/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#fifo">FIFO</a></li>
+    <li><a href="#保证因果交付causal-delivery">保证因果交付(Causal Delivery)</a></li>
+    <li><a href="#保证完全有序交付totally-ordered-delivery">保证完全有序交付(Totally Ordered Delivery)</a></li>
+    <li><a href="#分层">分层</a></li>
+    <li><a href="#实现fifo-delivery">实现FIFO Delivery</a>
+      <ul>
+        <li><a href="#序列号sequence-numbers">序列号(Sequence Numbers)</a></li>
+        <li><a href="#消息确认ack">消息确认(ACK)</a></li>
+      </ul>
+    </li>
+    <li><a href="#实现因果广播casual-broadcast">实现因果广播(Casual Broadcast)</a>
+      <ul>
+        <li></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown"><h1 id="6-消息交付message-delivery">
+  6. 消息交付(Message Delivery)
+  <a class="anchor" href="#6-%e6%b6%88%e6%81%af%e4%ba%a4%e4%bb%98message-delivery">#</a>
+</h1>
+<p>消息交付(Message Delivery)</p>
+<p>消息交付和消息的接收(Receiving)，发送(Sending)在于</p>
+<ul>
+<li>我们可以控制消息的发送，比如控制发送的频率</li>
+<li>消息的接收对于我们来说是一个事件，一条消息已经传送到了我们的网络设备上</li>
+<li>消息的交付也是我们可以控制的，比如消息经由网络传输到我们进程后，我们可以决定先放队列里不处理。</li>
+</ul>
+<p>消息的交付是由应用程序决定的，有时消息接收后不会立即处理，会被放在队列里面，想想看为什么会这么做呢？其中一个原因可能是服务繁忙，消息太多不能及时处理，所以放到队列里。另外还有原因可能是消息接收后是无序的，所以需要放队列里等无序的消息到齐了再有序地交付。</p>
+<p>那会有哪些有序消息交付呢？</p>
+<h2 id="fifo">
+  FIFO
+  <a class="anchor" href="#fifo">#</a>
+</h2>
+<p>FIFO就是First in, first out。相信这个原则大家都不陌生。但是这里还是给出严格的定义</p>
+<p>如果<strong>一个</strong>进程先发送的消息m1, 后发送的m2，那么，<strong>所有的</strong>消息接收进程都应该先交付m1,后交付m2。</p>
+<p>我们看下下面的这个例子，图中表示的分别是P1进程的消息发送事件和P2的消息交付事件。</p>
+<p><img src="https://files.huadonghu.com/20200525/sFlqJ8.png" alt="" /></p>
+<p>显然, P2进程应该先交付m1,后交付m2，这里就违背了FIFO。(FIFO violation)</p>
+<p>我们可以认为m1和m2塞到了一根管道里面，出来的时候应该是m1后m2。</p>
+<p>从上面的FIFO violation可以看出设计一个队列将消息缓存起来保证消息的有序交付还是很有必要的。</p>
+<p>对于分布式系统来说，一般也没必要去设计一个FIFO的消息交付，比如我们可以使用TCP进行传输，TCP是可以保证消息的有序性的。</p>
+<h2 id="保证因果交付causal-delivery">
+  保证因果交付(Causal Delivery)
+  <a class="anchor" href="#%e4%bf%9d%e8%af%81%e5%9b%a0%e6%9e%9c%e4%ba%a4%e4%bb%98causal-delivery">#</a>
+</h2>
+<p>前面数篇文章都在谈论因果，因果是是指事件发生的先后顺序。对于消息发送事件，如果m1的发送happens before m2，那么m1的交付事件也应该happens before m2。</p>
+<p>我们再看下这个例子：</p>
+<p><img src="https://files.huadonghu.com/20200525/sFlqJ8.png" alt="" /></p>
+<p>很明显，m1 happens before m2，但是交付的时候m2 happens before m1，这是违背了Causal Delivery原则的。</p>
+<p>上面的例子其实就是第一个违背FIFO Delivery原则的例子，我们可以看出如果违背了FIFO Delivery，也必然违背了Causal Delivery。这是因为，根据happens before的定义，如果<strong>同一个进程</strong>里m1在m2之前发生，则m1 happens before m2。这正符合FIFO中发送消息的要求。</p>
+<p>违背了FIFO Delivery必然违背Causal Delivery，那反过来呢？如果违背了Causal Delivery，是否一定违背了FIFO Delivery呢？</p>
+<p>我们看一个之前章节看过的例子：</p>
+<p><img src="https://files.huadonghu.com/20200523/2mfV1W.png" alt="" /></p>
+<p>根据我们之前学习，Bob发送“讨厌你“给Carol是发生在Alice发送“Bob很蠢&quot;之后的，但是Carol进程的消息交付却是先交付了“讨厌你“，很明显，上面的例子违背了Causal Delivery。</p>
+<p>上面的例子违背了FIFO delivery么？</p>
+<p>答案是没有违背。 有同学可能会问，Bob发送“讨厌你“事件 和 Alice发送“Bob很蠢&quot; 事件，消息交付顺序错了。这是违背了Causal Delivery。我们回头看FIFO Delivery，其要求是“同一进程“内的消息交付有序性。</p>
+<p>所有，我们设计了一个分布式系统，如果能够保证FIFO delivery，其实是不能保证Causal Delivery的。</p>
+<h2 id="保证完全有序交付totally-ordered-delivery">
+  保证完全有序交付(Totally Ordered Delivery)
+  <a class="anchor" href="#%e4%bf%9d%e8%af%81%e5%ae%8c%e5%85%a8%e6%9c%89%e5%ba%8f%e4%ba%a4%e4%bb%98totally-ordered-delivery">#</a>
+</h2>
+<p>我们上面学习了保证同一进程内消息有序交付的FIFO Delivery以及保证事件因果交付的Causal Delivery，下面我们看另一种交付，Totally Ordered Delivery，简写TO。</p>
+<p>如果一个进程先交付了m1,然后m2，那么所有的进程都应该先交付m1然后m2。</p>
+<p>同样的，我们举个违背TO的例子。</p>
+<p>起初两个备份节点R1, R2的数据是一致的，X都等于0，然后两个客户端分别发送了消息更新X为1，更新X为2，但是R1的消息交付顺序是m1, m2，而R2消息交付顺序为m2, m1。这是违背了所有进程消息交付顺序一致的原则的。</p>
+<p><img src="https://files.huadonghu.com/20200525/dkDexu.png" alt="" /></p>
+<p>一个事件发出多条消息，这个事件叫做广播(BroadCasting)，后面会讨论到。</p>
+<p>对于上面的两个广播事件的消息投递，我们已经知道是违背了TO的，那么他们有违背FIFO或者Causal Delivery吗？</p>
+<h2 id="分层">
+  分层
+  <a class="anchor" href="#%e5%88%86%e5%b1%82">#</a>
+</h2>
+<p><img src="https://files.huadonghu.com/20200525/t1Uauh.png" alt="" /></p>
+<p>一个系统如果不能保证FIFO，也必然不能保证Casual Delivery，一个系统如果能Casual Delivery则一定能保证FIFO。</p>
+<p>Totally Ordered Delivery应该放哪里呢？放在Casual Delivery上面么？如果你想清楚了上面Casual Delivery的思考题，那么这里应该回答NO。</p>
+<p>实现了TO其实也不能保证FIFO或者Causal Delivery。</p>
+<p><img src="https://files.huadonghu.com/20200525/1MlcP2.png" alt="" /></p>
+<h2 id="实现fifo-delivery">
+  实现FIFO Delivery
+  <a class="anchor" href="#%e5%ae%9e%e7%8e%b0fifo-delivery">#</a>
+</h2>
+<p>尽管前面提到我们很少需要去实现FIFO Delivery，但这里还是做一下简短的介绍。</p>
+<p>FIFO的定义是：如果<strong>一个</strong>进程先发送的消息m1, 后发送的m2，那么，<strong>所有的</strong>消息接收进程都应该先交付m1,后交付m2。</p>
+<p>或者等价于说同一个消息发送方发送的消息交付要跟发送顺序一样。</p>
+<p>一般来讲，有两种实现方式。</p>
+<h3 id="序列号sequence-numbers">
+  序列号(Sequence Numbers)
+  <a class="anchor" href="#%e5%ba%8f%e5%88%97%e5%8f%b7sequence-numbers">#</a>
+</h3>
+<ul>
+<li>发送方对每条加上序列号和进程id</li>
+<li>发送方每次对序列号+1</li>
+<li>接收方如果发现接收的消息序列号不是上次消息序列号+1，则放入队列等待到正确的消息到达。</li>
+</ul>
+<p>这种方式很好理解，但是也会存在一些问题。</p>
+<p>如果消息传输丢了怎么办？</p>
+<p><img src="https://files.huadonghu.com/20200525/ZGisXS.png" alt="" /></p>
+<p>有一种策略就是消息丢了的话继续交付，不进入队列，但是无法很好的处理消息的延迟问题：</p>
+<p><img src="https://files.huadonghu.com/20200525/08IS6W.png" alt="" /></p>
+<h3 id="消息确认ack">
+  消息确认(ACK)
+  <a class="anchor" href="#%e6%b6%88%e6%81%af%e7%a1%ae%e8%ae%a4ack">#</a>
+</h3>
+<p>发送方和接收方通过发送，确认，发送，确认的方式进行，这种方式的缺陷是效率很低。当然也有一些解决方法，感兴趣的同学可以自行查阅计算机网络介绍TCP的知识。</p>
+<h2 id="实现因果广播casual-broadcast">
+  实现因果广播(Casual Broadcast)
+  <a class="anchor" href="#%e5%ae%9e%e7%8e%b0%e5%9b%a0%e6%9e%9c%e5%b9%bf%e6%92%adcasual-broadcast">#</a>
+</h2>
+<h4 id="算法">
+  算法
+  <a class="anchor" href="#%e7%ae%97%e6%b3%95">#</a>
+</h4>
+<p>我们再来看下违背Casual Delivery的例子</p>
+<p><img src="https://files.huadonghu.com/20200523/2mfV1W.png" alt="" /></p>
+<p>Bob发送“讨厌你“给Carol是发生在Alice发送“Bob很蠢&quot;之后的，但是Carol进程的消息交付却是先交付了“讨厌你“。</p>
+<p>为了实现causal delivery，我们可以借助之前学习的向量时钟(Vector Clock)来跟踪消息以确保消息保证因果关系交付，但是会对向量时钟做一些修改：时钟只记录消息的发送，不记录消息的接收。</p>
+<p>下面是算法详情：</p>
+<ol>
+<li>消息在发送前，先将本地时钟+1，然后将本地时钟随消息一起发送。</li>
+<li>如果进程P1发送的消息在P2<strong>交付了</strong>，则将P2时钟P1所在的位置+1。</li>
+<li>P2仅仅在满足了下面条件时才会交付P1的消息：
+<ol>
+<li>P2上P1位置的时钟 + 1 = 接收到的P1时钟</li>
+<li>P2上除P1位置的时钟都应该&gt;= P1上除P1以外对应其他位置的时钟。</li>
+</ol>
+</li>
+</ol>
+<p>我们验证下上面的算法。</p>
+<p><img src="https://files.huadonghu.com/20200526/tBKdKe.png?xa" alt="" /></p>
+<p>这个算法有三点要注意，首先，消息接收事件不会对时钟进行计算，其次，只有在消息交付后才会对时钟进行+1。</p>
+<p>图中标绿的地方，Carol中Bob的时钟是0，Bob传输过来的Bob位置时钟是1，满足条件3.1，但是，Carol中Alice的时钟小于Bob传输过来的的Alice的时钟，这里不符合条件3.2。Carol中Alice的时钟小于Bob传输过来的的Alice的时钟意味着Alice有发送消息，但是Carol还未进行交付。此时，绿色部分的消息会被进行缓存。</p>
+<p>图中黄色的地方，Carol中Alice的时钟是0，Alice传输过来的Alice位置时钟是1，满足条件3.1，Carol中其他地方的时钟都大于等于Alice其他地方对应的时钟，满足3.2。此时，黄色部分的消息会被交付。</p>
+<p>黄色部分的消息被交付后，绿色的消息也就符合条件，进行交付。</p>
+<p><img src="https://files.huadonghu.com/20200526/BUc0VF.png" alt="" /></p>
+<p>下面的例子留给你练习下这个算法。</p>
+<p><img src="https://files.huadonghu.com/20200526/leQlMz.png" alt="" /></p>
+<h4 id="因果关系的应用">
+  因果关系的应用
+  <a class="anchor" href="#%e5%9b%a0%e6%9e%9c%e5%85%b3%e7%b3%bb%e7%9a%84%e5%ba%94%e7%94%a8">#</a>
+</h4>
+<p>因果关系，或者说happens-before关系，我们学习了可以用来判断事件发生的先后顺序进行系统的debug，也学习了用来保证因果交付，下一篇文章我们会介绍因果关系的另一个应用：快照算法。快照是在某一个时刻将整个系统的所有状态进行保存，就好像给系统拍个照片一样。如果我们设定为每天上午10点给系统做快照，有可能因为各个机器间时间不一致，导致有些状态并没有被加进快照，如下图，我们拿到M1和M2的两个快照，发现M2有接收到M1的消息（红圈标记的），但是M1的快照中并没有记录这条消息的发送。这时，自然时钟是不适合的。</p>
+<p><img src="https://files.huadonghu.com/20200527/2A4Hlc.png" alt="" /></p>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+
+
+
+</div>
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "distributed-system" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#fifo">FIFO</a></li>
+    <li><a href="#保证因果交付causal-delivery">保证因果交付(Causal Delivery)</a></li>
+    <li><a href="#保证完全有序交付totally-ordered-delivery">保证完全有序交付(Totally Ordered Delivery)</a></li>
+    <li><a href="#分层">分层</a></li>
+    <li><a href="#实现fifo-delivery">实现FIFO Delivery</a>
+      <ul>
+        <li><a href="#序列号sequence-numbers">序列号(Sequence Numbers)</a></li>
+        <li><a href="#消息确认ack">消息确认(ACK)</a></li>
+      </ul>
+    </li>
+    <li><a href="#实现因果广播casual-broadcast">实现因果广播(Casual Broadcast)</a>
+      <ul>
+        <li></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+ 
+    </aside>
+    
+  </main>
+
+  
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

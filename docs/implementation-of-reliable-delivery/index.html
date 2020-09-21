@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en" dir=>
+
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="10. 实现可靠消息交付 #  我们先回顾下可靠消息交付的定义：
+P1发送了消息m到P2，那么P1或者P2其中的任意一个崩溃了，P2最终还是会交付消息m。
+上面的定义可能会有不同的版本，比如：
+P1发送了消息m到P2，那么P1或者P2其中的任意一个崩溃了，并且消息没有丢失，P2最终还是会交付消息m。
+其实上面的两种定义的差别在于我们讨论的错误模型，如果是消息丢失模型的话，那我们就要考虑消息丢失的情况，如果只考虑崩溃模型的话，那么则不需要考虑消息丢失。
+那么消息丢失模型和崩溃模型哪种场景会更加实际一些呢？
+显然是消息丢失模型，我们在上篇文章中提到过，崩溃模型只是消息丢失模型的一个子集。
+那如果把模型切换到拜占庭模型呢？上面的可靠消息交付的定义是不是也要发生变化了呢？是的，那就要加上发送的消息没有被恶意地操控。那这样对可靠消息交付的定义太过于复杂了，至于这个定义如何简化使其更加通用，我们会在文章后面再次探讨。
+实现可靠消息交付 #  比如Alice需要给Bob发送消息，Alice如何保证Bob已经交付了消息了？
+有一种策略就是Alice将要发送的消息放入缓冲区，然后不停地给Bob发送这条消息，直到Bob确认(ACK)了这条消息已经交付，Alice从缓冲区中移除这条消息。
+但是Alice给Bob重复发送了多次相同的消息，或者说Bob接收到了多次相同的消息，会有什么影响吗？
+这个需要分情况讨论。
+上面的例子中，Alice发送了多条消息将X设置为5，尽管Bob多次接收到这条消息，但是最终的X是正确的，等于5。
+上面的例子中，Alice只想将 X&#43;1，但是由于重复发送，导致最终X被加了两次。这个不是我们期待的。
+上面的第一种操作我们称作幂等的(idempotent)，幂等操作的特点是其任意多次执行所产生的影响均与一次执行的影响相同。
+如果想保证消息被可靠地交付了，一个理想的做法就是尝试多次发送，但是不是所有的消息操作都是幂等的。但是简单来说，如果一个消息是幂等的，那么我们可以简单地通过上述多次发送的方式保证消息的可靠交付。
+可靠交付有时又称作至少一次交付(at least once delivery)，也就是说一条消息至少要被交付一次。
+与之对应的就是至多一次交付(at most once delivery)，消息只会被发送一次，那也就最多被交付一次。
+可能有同学会问了，能不能做到恰好一次交付(exactly once delivery)呢？
+实际上，如果有宣称其系统可以做到恰好一次交付，那是基于要交付的消息是幂等的前提。
+实现可靠广播(Reliable Broadcast) #  广播(Broadcast)这个词我们已经提到过多次，这里做更多的介绍。
+单播(UniCast)：一个进程给另一个进程发送消息。一个发送方，一个接收方。是一对一的关系。
+广播(Broadcast)：一个进程给其他所有进程发送消息。一个发送方，剩下的都是接收方。
+多播(multicast)：一个进程给多个进程发送消息。一个发送方，多个接收方。
+单播和广播我们之前都有见过，那么多播模型呢？
+上面的例子是来自之前讲的违背Total Order Delivery的例子，C1 给 R1和R2发送消息，但是不给C2发送，这就是多播。
+这里不会讨论单播，因为我们做的基本前提就是一个进程给另一个进程发送消息。
+那我们该如果使用单播实现广播呢？
+广播是一个发送方给剩下的所有进程发送消息，那我们可以从这个发送发发起多次单播分别给其他进程发送消息，这样就实现了广播。
+Alice要对Bob和Carol进行广播，尽管在Lamport图中只有一个事件，实际上是通过两次单播实现的。
+既然是两个独立的单播发送事件，那问题就要出现了。
+我们先给出可靠广播交付的定义：如果一个正确的进程广播了消息m，那么所有的正确的进程都会交付m。
+什么叫做正确的进程呢？这个需要看我们所处的错误模型，如果是拜占庭模型，那么正确的进程是没有恶意的进程，如果是崩溃模型，那么正确的进程是没有崩溃的进程。
+回答本文最开始关于可靠消息交付更加普遍的定义：如果一个正确的进程P1发送消息给正确的进程P2，并且消息m没有丢失，那么P2最终一定会交付m。这里的定义还是需要保证m没有丢失，因为即使P1, P2是正确的，消息也有可能在传输过程中丢失。
+回到可靠广播交付，我们看下下面的例子。
+Alice 广播了消息m，Bob成功进行了交付，但是Alice在接收到消息后崩溃了，没有对m进行交付。这个例子违背可靠广播的定义了吗？答案是NO，因为Carol崩溃了，不符合“正确进程&quot;的前提。
+Alice想要广播消息m，在单播了给Bob的消息后，进程崩溃，导致给Carol的消息没有播出。这个例子违背可靠广播的定义了吗？答案是Yes，因为在Alice开始时Alice是正确的进程，但是中途崩溃导致广播没有完成。
+既然在广播的过程中任意的一个进程都有可能崩溃，那该如何实现可靠广播呢？
+假设我们制定这样的一个协议：一个进程在接收到消息后，里面广播这条消息，然后进行交付。
+即使Alice仅仅单播了Bob，Carol也会接收到消息。
+如果Bob接收到消息后还没来得及广播就崩溃了呢？
+实际上上面的例子并不违背可靠广播的定义，因为Bob没有交付这条消息，Carol也没有！
+下面给出可靠广播的具体算法：
+ 所有的进程维护一个已经交付消息的集合。 当进程P想要广播消息m  P将m单播到其他素有的进程（除了自己） P将m加到自己已经交付消息集合里面   当P1接收到来自P2的消息时：  如果m在已经交付消息集合里面，丢弃这条消息。 否则，将m单播到其他素有的进程（除了自己P1和P2） 将m加到自己已经交付消息集合里面    注意到，上述算法通过发送消息给消息源进程，可以减少一些消息量。">
+<meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="10. 实现可靠消息交付" />
+<meta property="og:description" content="10. 实现可靠消息交付 #  我们先回顾下可靠消息交付的定义：
+P1发送了消息m到P2，那么P1或者P2其中的任意一个崩溃了，P2最终还是会交付消息m。
+上面的定义可能会有不同的版本，比如：
+P1发送了消息m到P2，那么P1或者P2其中的任意一个崩溃了，并且消息没有丢失，P2最终还是会交付消息m。
+其实上面的两种定义的差别在于我们讨论的错误模型，如果是消息丢失模型的话，那我们就要考虑消息丢失的情况，如果只考虑崩溃模型的话，那么则不需要考虑消息丢失。
+那么消息丢失模型和崩溃模型哪种场景会更加实际一些呢？
+显然是消息丢失模型，我们在上篇文章中提到过，崩溃模型只是消息丢失模型的一个子集。
+那如果把模型切换到拜占庭模型呢？上面的可靠消息交付的定义是不是也要发生变化了呢？是的，那就要加上发送的消息没有被恶意地操控。那这样对可靠消息交付的定义太过于复杂了，至于这个定义如何简化使其更加通用，我们会在文章后面再次探讨。
+实现可靠消息交付 #  比如Alice需要给Bob发送消息，Alice如何保证Bob已经交付了消息了？
+有一种策略就是Alice将要发送的消息放入缓冲区，然后不停地给Bob发送这条消息，直到Bob确认(ACK)了这条消息已经交付，Alice从缓冲区中移除这条消息。
+但是Alice给Bob重复发送了多次相同的消息，或者说Bob接收到了多次相同的消息，会有什么影响吗？
+这个需要分情况讨论。
+上面的例子中，Alice发送了多条消息将X设置为5，尽管Bob多次接收到这条消息，但是最终的X是正确的，等于5。
+上面的例子中，Alice只想将 X&#43;1，但是由于重复发送，导致最终X被加了两次。这个不是我们期待的。
+上面的第一种操作我们称作幂等的(idempotent)，幂等操作的特点是其任意多次执行所产生的影响均与一次执行的影响相同。
+如果想保证消息被可靠地交付了，一个理想的做法就是尝试多次发送，但是不是所有的消息操作都是幂等的。但是简单来说，如果一个消息是幂等的，那么我们可以简单地通过上述多次发送的方式保证消息的可靠交付。
+可靠交付有时又称作至少一次交付(at least once delivery)，也就是说一条消息至少要被交付一次。
+与之对应的就是至多一次交付(at most once delivery)，消息只会被发送一次，那也就最多被交付一次。
+可能有同学会问了，能不能做到恰好一次交付(exactly once delivery)呢？
+实际上，如果有宣称其系统可以做到恰好一次交付，那是基于要交付的消息是幂等的前提。
+实现可靠广播(Reliable Broadcast) #  广播(Broadcast)这个词我们已经提到过多次，这里做更多的介绍。
+单播(UniCast)：一个进程给另一个进程发送消息。一个发送方，一个接收方。是一对一的关系。
+广播(Broadcast)：一个进程给其他所有进程发送消息。一个发送方，剩下的都是接收方。
+多播(multicast)：一个进程给多个进程发送消息。一个发送方，多个接收方。
+单播和广播我们之前都有见过，那么多播模型呢？
+上面的例子是来自之前讲的违背Total Order Delivery的例子，C1 给 R1和R2发送消息，但是不给C2发送，这就是多播。
+这里不会讨论单播，因为我们做的基本前提就是一个进程给另一个进程发送消息。
+那我们该如果使用单播实现广播呢？
+广播是一个发送方给剩下的所有进程发送消息，那我们可以从这个发送发发起多次单播分别给其他进程发送消息，这样就实现了广播。
+Alice要对Bob和Carol进行广播，尽管在Lamport图中只有一个事件，实际上是通过两次单播实现的。
+既然是两个独立的单播发送事件，那问题就要出现了。
+我们先给出可靠广播交付的定义：如果一个正确的进程广播了消息m，那么所有的正确的进程都会交付m。
+什么叫做正确的进程呢？这个需要看我们所处的错误模型，如果是拜占庭模型，那么正确的进程是没有恶意的进程，如果是崩溃模型，那么正确的进程是没有崩溃的进程。
+回答本文最开始关于可靠消息交付更加普遍的定义：如果一个正确的进程P1发送消息给正确的进程P2，并且消息m没有丢失，那么P2最终一定会交付m。这里的定义还是需要保证m没有丢失，因为即使P1, P2是正确的，消息也有可能在传输过程中丢失。
+回到可靠广播交付，我们看下下面的例子。
+Alice 广播了消息m，Bob成功进行了交付，但是Alice在接收到消息后崩溃了，没有对m进行交付。这个例子违背可靠广播的定义了吗？答案是NO，因为Carol崩溃了，不符合“正确进程&quot;的前提。
+Alice想要广播消息m，在单播了给Bob的消息后，进程崩溃，导致给Carol的消息没有播出。这个例子违背可靠广播的定义了吗？答案是Yes，因为在Alice开始时Alice是正确的进程，但是中途崩溃导致广播没有完成。
+既然在广播的过程中任意的一个进程都有可能崩溃，那该如何实现可靠广播呢？
+假设我们制定这样的一个协议：一个进程在接收到消息后，里面广播这条消息，然后进行交付。
+即使Alice仅仅单播了Bob，Carol也会接收到消息。
+如果Bob接收到消息后还没来得及广播就崩溃了呢？
+实际上上面的例子并不违背可靠广播的定义，因为Bob没有交付这条消息，Carol也没有！
+下面给出可靠广播的具体算法：
+ 所有的进程维护一个已经交付消息的集合。 当进程P想要广播消息m  P将m单播到其他素有的进程（除了自己） P将m加到自己已经交付消息集合里面   当P1接收到来自P2的消息时：  如果m在已经交付消息集合里面，丢弃这条消息。 否则，将m单播到其他素有的进程（除了自己P1和P2） 将m加到自己已经交付消息集合里面    注意到，上述算法通过发送消息给消息源进程，可以减少一些消息量。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://distsystms.huadonghu.com/docs/implementation-of-reliable-delivery/" />
+<meta property="article:published_time" content="2020-09-10T23:58:20-07:00" />
+<meta property="article:modified_time" content="2020-09-10T23:58:20-07:00" />
+<title>10. 实现可靠消息交付 | 分布式系统概述</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/favicon.png" type="image/x-icon">
+<link rel="stylesheet" href="/book.min.891c5b58a7a694942d519238f3c4138504c9ad2e207c0fd6541f9cd4f8d6220a.css" integrity="sha256-iRxbWKemlJQtUZI488QThQTJrS4gfA/WVB&#43;c1PjWIgo=">
+<script defer src="/en.search.min.a11bce14b45c5aff67fd7c1055386de7bc7645033a9f7998b8d0fab98cc3a8e7.js" integrity="sha256-oRvOFLRcWv9n/XwQVTht57x2RQM6n3mYuND6uYzDqOc="></script>
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-131378726-6', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+  
+</head>
+
+<body dir=>
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      
+  <nav>
+<h2 class="book-brand">
+  <a href="/"><span>分布式系统概述</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/case-study-amazons-dynamodb/" class="">14. Case study: Amazon&#39;s DynamoDB</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/eventual-consistency/" class="">13. 最终一致性(eventual consistency)，CAP理论</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/replications-and-consistency/" class="">11. 冗余备份(Replications)与一致性(Consistency)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/implementation-of-reliable-delivery/" class=" active">10. 实现可靠消息交付</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/reliable-delivery/" class="">9. 可靠消息交付</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/safety-liveness/" class="">8. Safety 和 Liveness</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/chandylamport-snapshot-algorithm/" class="">7. Chandy-Lamport快照(Snapshot)算法</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/consensus/" class="">12. 分布式共识算法</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/message-delivery/" class="">6. 消息交付(Message Delivery)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/raft/" class="">分布式共识算法-Raft</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/protocol-lamport-diagram/" class="">5. 网络协议(Protocol)与Lamport diagram</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/vector-clock/" class="">4. 向量时钟(Vector Clock)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/lamport-clocks/" class="">3. Lamport时钟(Lamport clocks)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/lamport-diagrams-happensbefore-partial-order/" class="">2. Lamport Diagrams，Happens-before，同步网络与异步网络，偏序关系</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/distributed-systems-what-and-why-time-and-clocks/" class="">1. 什么是和为什么分布式系统？时间和时钟。</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/paxos/" class="">分布式共识算法-Paxos</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var menu=document.querySelector("aside.book-menu nav");addEventListener("beforeunload",function(event){localStorage.setItem("menu.scrollTop",menu.scrollTop);});menu.scrollTop=localStorage.getItem("menu.scrollTop");})();</script>
+
+
+ 
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <strong>10. 实现可靠消息交付</strong>
+
+  <label for="toc-control">
+    
+    <img src="/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#实现可靠消息交付">实现可靠消息交付</a></li>
+    <li><a href="#实现可靠广播reliable--broadcast">实现可靠广播(Reliable  Broadcast)</a></li>
+  </ul>
+</nav>
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown"><h1 id="10-实现可靠消息交付">
+  10. 实现可靠消息交付
+  <a class="anchor" href="#10-%e5%ae%9e%e7%8e%b0%e5%8f%af%e9%9d%a0%e6%b6%88%e6%81%af%e4%ba%a4%e4%bb%98">#</a>
+</h1>
+<p>我们先回顾下可靠消息交付的定义：</p>
+<p>P1发送了消息m到P2，那么P1或者P2其中的任意一个崩溃了，P2最终还是会交付消息m。</p>
+<p>上面的定义可能会有不同的版本，比如：</p>
+<p>P1发送了消息m到P2，那么P1或者P2其中的任意一个崩溃了，<strong>并且消息没有丢失</strong>，P2最终还是会交付消息m。</p>
+<p>其实上面的两种定义的差别在于我们讨论的错误模型，如果是消息丢失模型的话，那我们就要考虑消息丢失的情况，如果只考虑崩溃模型的话，那么则不需要考虑消息丢失。</p>
+<p>那么消息丢失模型和崩溃模型哪种场景会更加实际一些呢？</p>
+<p>显然是消息丢失模型，我们在上篇文章中提到过，崩溃模型只是消息丢失模型的一个子集。</p>
+<p>那如果把模型切换到拜占庭模型呢？上面的可靠消息交付的定义是不是也要发生变化了呢？是的，那就要加上发送的消息没有被恶意地操控。那这样对可靠消息交付的定义太过于复杂了，至于这个定义如何简化使其更加通用，我们会在文章后面再次探讨。</p>
+<h2 id="实现可靠消息交付">
+  实现可靠消息交付
+  <a class="anchor" href="#%e5%ae%9e%e7%8e%b0%e5%8f%af%e9%9d%a0%e6%b6%88%e6%81%af%e4%ba%a4%e4%bb%98">#</a>
+</h2>
+<p>比如Alice需要给Bob发送消息，Alice如何保证Bob已经交付了消息了？</p>
+<p>有一种策略就是Alice将要发送的消息放入缓冲区，然后不停地给Bob发送这条消息，直到Bob确认(ACK)了这条消息已经交付，Alice从缓冲区中移除这条消息。</p>
+<p><img src="https://files.huadonghu.com/20200602/tR6v4a.png?2020" alt="" /></p>
+<p>但是Alice给Bob重复发送了多次相同的消息，或者说Bob接收到了多次相同的消息，会有什么影响吗？</p>
+<p>这个需要分情况讨论。</p>
+<p><img src="https://files.huadonghu.com/20200602/KC2NL3.png" alt="" /></p>
+<p>上面的例子中，Alice发送了多条消息将X设置为5，尽管Bob多次接收到这条消息，但是最终的X是正确的，等于5。</p>
+<p><img src="https://files.huadonghu.com/20200602/Fs2P91.png" alt="" /></p>
+<p>上面的例子中，Alice只想将 X+1，但是由于重复发送，导致最终X被加了两次。这个不是我们期待的。</p>
+<p>上面的第一种操作我们称作幂等的(idempotent)，<strong>幂等</strong>操作的特点是其任意多次执行所产生的影响均与一次执行的影响相同。</p>
+<p>如果想保证消息被可靠地交付了，一个理想的做法就是尝试多次发送，但是不是所有的消息操作都是幂等的。但是简单来说，如果一个消息是幂等的，那么我们可以简单地通过上述多次发送的方式保证消息的可靠交付。</p>
+<p>可靠交付有时又称作至少一次交付(at least once delivery)，也就是说一条消息至少要被交付一次。</p>
+<p>与之对应的就是至多一次交付(at most once delivery)，消息只会被发送一次，那也就最多被交付一次。</p>
+<p>可能有同学会问了，能不能做到恰好一次交付(exactly once delivery)呢？</p>
+<p>实际上，如果有宣称其系统可以做到恰好一次交付，那是基于要交付的消息是幂等的前提。</p>
+<h2 id="实现可靠广播reliable--broadcast">
+  实现可靠广播(Reliable  Broadcast)
+  <a class="anchor" href="#%e5%ae%9e%e7%8e%b0%e5%8f%af%e9%9d%a0%e5%b9%bf%e6%92%adreliable--broadcast">#</a>
+</h2>
+<p>广播(Broadcast)这个词我们已经提到过多次，这里做更多的介绍。</p>
+<p>单播(UniCast)：一个进程给另一个进程发送消息。一个发送方，一个接收方。是一对一的关系。</p>
+<p>广播(Broadcast)：一个进程给其他所有进程发送消息。一个发送方，剩下的都是接收方。</p>
+<p>多播(multicast)：一个进程给多个进程发送消息。一个发送方，多个接收方。</p>
+<p>单播和广播我们之前都有见过，那么多播模型呢？</p>
+<p><img src="https://files.huadonghu.com/20200525/dkDexu.png" alt="" /></p>
+<p>上面的例子是来自之前讲的违背Total Order Delivery的例子，C1 给 R1和R2发送消息，但是不给C2发送，这就是多播。</p>
+<p>这里不会讨论单播，因为我们做的基本前提就是一个进程给另一个进程发送消息。</p>
+<p>那我们该如果使用单播实现广播呢？</p>
+<p>广播是一个发送方给剩下的所有进程发送消息，那我们可以从这个发送发发起多次单播分别给其他进程发送消息，这样就实现了广播。</p>
+<p><img src="https://files.huadonghu.com/20200602/Vq8xjj.png" alt="" /></p>
+<p>Alice要对Bob和Carol进行广播，尽管在Lamport图中只有一个事件，实际上是通过两次单播实现的。</p>
+<p>既然是两个独立的单播发送事件，那问题就要出现了。</p>
+<p>我们先给出可靠广播交付的定义：如果一个<strong>正确</strong>的进程广播了消息m，那么所有的<strong>正确</strong>的进程都会交付m。</p>
+<p>什么叫做正确的进程呢？这个需要看我们所处的错误模型，如果是拜占庭模型，那么正确的进程是没有恶意的进程，如果是崩溃模型，那么正确的进程是没有崩溃的进程。</p>
+<p>回答本文最开始关于可靠消息交付更加普遍的定义：如果一个正确的进程P1发送消息给正确的进程P2，并且消息m没有丢失，那么P2最终一定会交付m。这里的定义还是需要保证m没有丢失，因为即使P1, P2是正确的，消息也有可能在传输过程中丢失。</p>
+<p>回到可靠广播交付，我们看下下面的例子。</p>
+<p><img src="https://files.huadonghu.com/20200602/r2Jp4q.png" alt="" /></p>
+<p>Alice 广播了消息m，Bob成功进行了交付，但是Alice在接收到消息后崩溃了，没有对m进行交付。这个例子违背可靠广播的定义了吗？答案是NO，因为Carol崩溃了，不符合“正确进程&quot;的前提。</p>
+<p><img src="https://files.huadonghu.com/20200602/8rHxJH.png" alt="" /></p>
+<p>Alice想要广播消息m，在单播了给Bob的消息后，进程崩溃，导致给Carol的消息没有播出。这个例子违背可靠广播的定义了吗？答案是Yes，因为在Alice开始时Alice是正确的进程，但是中途崩溃导致广播没有完成。</p>
+<p>既然在广播的过程中任意的一个进程都有可能崩溃，那该如何实现可靠广播呢？</p>
+<p>假设我们制定这样的一个协议：一个进程在接收到消息后，里面广播这条消息，然后进行交付。</p>
+<p><img src="https://files.huadonghu.com/20200602/3bYI9W.png" alt="" /></p>
+<p>即使Alice仅仅单播了Bob，Carol也会接收到消息。</p>
+<p>如果Bob接收到消息后还没来得及广播就崩溃了呢？</p>
+<p><img src="https://files.huadonghu.com/20200602/y4Sb50.png" alt="" /></p>
+<p>实际上上面的例子并不违背可靠广播的定义，因为Bob没有交付这条消息，Carol也没有！</p>
+<p>下面给出可靠广播的具体算法：</p>
+<ul>
+<li>所有的进程维护一个已经交付消息的集合。</li>
+<li>当进程P想要广播消息m
+<ol>
+<li>P将m单播到其他素有的进程（除了自己）</li>
+<li>P将m加到自己已经交付消息集合里面</li>
+</ol>
+</li>
+<li>当P1接收到来自P2的消息时：
+<ol>
+<li>如果m在已经交付消息集合里面，丢弃这条消息。</li>
+<li>否则，将m单播到其他素有的进程（除了自己P1和P2）</li>
+<li>将m加到自己已经交付消息集合里面</li>
+</ol>
+</li>
+</ul>
+<p><img src="https://files.huadonghu.com/20200602/KQvQ3c.png" alt="" /></p>
+<p>注意到，上述算法通过发送消息给消息源进程，可以减少一些消息量。</p>
+<p>我们可以发现要实现可靠的广播采取的方式是对消息进行冗余备份从而进行容错处理，这种思路在分布式系统的设计中很常见，下一篇文章将会介绍这种思路的另一个应用：冗余备份。</p>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+
+
+
+</div>
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "distributed-system" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#实现可靠消息交付">实现可靠消息交付</a></li>
+    <li><a href="#实现可靠广播reliable--broadcast">实现可靠广播(Reliable  Broadcast)</a></li>
+  </ul>
+</nav>
+
+ 
+    </aside>
+    
+  </main>
+
+  
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

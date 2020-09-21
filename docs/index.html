@@ -4,13 +4,18 @@
 <head>
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="">
-<meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="Categories" />
+<meta name="description" content="📚分布式系统(Distributed Systems) #  内容主要参考了UCSC的Lindsey Kuper教授的CSE138, MIT的Robert Morris教授的6.824。
+主要参考书籍为Distributed Systems: Concepts and Design (5th Edition) 5th Edition by George Coulouris, Jean Dollimore, Tim Kindberg, Gordon Blair。
+页面部分内容可能需要梯子才能正常展示。
+主要覆盖的话题
+ 逻辑时钟 快照算法 备份处理 共识算法 一致性算法 分布式事务 MapReduce GFS Zookeeper 更多  Contributor:
+ @Huadong Hu(me[AT]huadonghu.com)  ">
+<meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="分布式系统" />
 <meta property="og:description" content="" />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://distsystms.huadonghu.com/categories/" />
-
-<title>Categories | 分布式系统概述</title>
+<meta property="og:url" content="https://distsystms.huadonghu.com/docs/" />
+<meta property="og:updated_time" content="2020-09-03T23:58:20-07:00" />
+<title>分布式系统 | 分布式系统概述</title>
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" href="/favicon.png" type="image/x-icon">
 <link rel="stylesheet" href="/book.min.891c5b58a7a694942d519238f3c4138504c9ad2e207c0fd6541f9cd4f8d6220a.css" integrity="sha256-iRxbWKemlJQtUZI488QThQTJrS4gfA/WVB&#43;c1PjWIgo=">
@@ -26,7 +31,7 @@ if (!doNotTrack) {
 }
 </script>
 <script async src='https://www.google-analytics.com/analytics.js'></script>
-<link rel="alternate" type="application/rss+xml" href="https://distsystms.huadonghu.com/categories/index.xml" title="分布式系统概述" />
+<link rel="alternate" type="application/rss+xml" href="https://distsystms.huadonghu.com/docs/index.xml" title="分布式系统概述" />
 <!--
 Made with Book Theme
 https://github.com/alex-shpak/hugo-book
@@ -314,7 +319,7 @@ https://github.com/alex-shpak/hugo-book
     <img src="/svg/menu.svg" class="book-icon" alt="Menu" />
   </label>
 
-  <strong>Categories</strong>
+  <strong>分布式系统</strong>
 
   <label for="toc-control">
     
@@ -327,29 +332,7 @@ https://github.com/alex-shpak/hugo-book
   
   <aside class="hidden clearfix">
     
-  <nav>
-  <ul>
-  
-    
-    <li class="book-section-flat">
-      <strong>Categories</strong>
-      <ul>
-      
-      </ul>
-    </li>
-    
-  
-    
-    <li class="book-section-flat">
-      <strong>Tags</strong>
-      <ul>
-      
-      </ul>
-    </li>
-    
-  
-  </ul>
-</nav>
+  <nav id="TableOfContents"></nav>
 
 
   </aside>
@@ -359,11 +342,31 @@ https://github.com/alex-shpak/hugo-book
 
       
       
-  
-
-  
-
-
+  <article class="markdown"><h1 id="分布式系统distributed-systems">
+  📚分布式系统(Distributed Systems)
+  <a class="anchor" href="#%e5%88%86%e5%b8%83%e5%bc%8f%e7%b3%bb%e7%bb%9fdistributed-systems">#</a>
+</h1>
+<p>内容主要参考了UCSC的Lindsey Kuper教授的<a href="http://composition.al/CSE138-2020-03/index.html">CSE138</a>, MIT的Robert Morris教授的<a href="https://pdos.csail.mit.edu/6.824/">6.824</a>。</p>
+<p>主要参考书籍为Distributed Systems: Concepts and Design (5th Edition) 5th Edition by George Coulouris, Jean Dollimore, Tim Kindberg, Gordon Blair。</p>
+<p>页面部分内容可能需要梯子才能正常展示。</p>
+<p>主要覆盖的话题</p>
+<ol>
+<li>逻辑时钟</li>
+<li>快照算法</li>
+<li>备份处理</li>
+<li>共识算法</li>
+<li>一致性算法</li>
+<li>分布式事务</li>
+<li>MapReduce</li>
+<li>GFS</li>
+<li>Zookeeper</li>
+<li>更多</li>
+</ol>
+<p>Contributor:</p>
+<ol>
+<li>@Huadong Hu(me[AT]huadonghu.com)</li>
+</ol>
+</article>
  
       
 
@@ -383,6 +386,29 @@ https://github.com/alex-shpak/hugo-book
 
       
   
+  <div class="book-comments">
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "distributed-system" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+  
  
 
       <label for="menu-control" class="hidden book-menu-overlay"></label>
@@ -391,29 +417,7 @@ https://github.com/alex-shpak/hugo-book
     
     <aside class="book-toc">
       
-  <nav>
-  <ul>
-  
-    
-    <li class="book-section-flat">
-      <strong>Categories</strong>
-      <ul>
-      
-      </ul>
-    </li>
-    
-  
-    
-    <li class="book-section-flat">
-      <strong>Tags</strong>
-      <ul>
-      
-      </ul>
-    </li>
-    
-  
-  </ul>
-</nav>
+  <nav id="TableOfContents"></nav>
 
  
     </aside>

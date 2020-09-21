@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en" dir=>
+
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="1. 什么是和为什么分布式系统？时间和时钟。 #  什么是分布式系统 #   一个系统通过网络连接运行在多个的节点上 分布式系统的主要特点之一是局部失败(Partial Failure)  局部失败 #  运行在多个节点上的定义应该很好理解，第2点的局部失败又是什么呢？
+对于单个节点，或者说单台机器，如果失败了，一般重启也就能解决问题。但是对于多个节点构成的集群系统，如果集群中的个别机器失败了，很明显，将集群重启并不是很理想的做法。对于分布式系统而言，尽管存在一些失败的节点，整个系统需要保证依旧正常运行。而局部失败是不可避免的，比如网络故障，硬盘机械故障等等，所以说分布式系统的主要特点之一是局部失败。
+高性能计算(HPC, High performance computing) #  相较于分布式系统，HPC往往将局部失败当作整体失败(total failure)对待，而分布式系统在局部失败时需要正常运转。
+分布式系统会有些Failure #  假设我的系统由两台机器M1, M2组成，M2中存储了X的值，如果M1想知道X的值，便会向M2发起请求，那么会有哪些情形发生呢？
+可能的情形有：
+ 从 M1发送的消息在传输过程中丢失。 M1的消息发送后很长时间才被M2接收。比如网络延时，或者 M2有消息队列积压较多。 M2宕机了。  那M1将消息发出后，它能感知到上面的情形么？实际上还有些情形比如
+ M2回复的很慢 M2的回复在回传过程中丢失了  很明显，M1在发出消息后如果没有接收到回应，M1自身是不可能感知到是出了什么问题的，除非有一个掌控全局的观察者告诉M1发生了什么。
+还存在其他的问题么？
+ M2可能撒谎，X明明是3，却说X等于5 M2可能拒绝回答。 可能有宇宙射线，传送过程中将X的值置成了错误的值。 &hellip;  上述的这些问题叫做拜占庭故障(Byzantine faults)， 而且都是在真正的分布式系统中可能发生的。比如分布式的货币系统（比特币），每个用户系统都记录了其他用户的余额，如果有些用户的系统被黑客攻击了，对金额撒谎怎么办？
+网络超时 #  M1此时发送消息给M2要求把X的值&#43;1，M2在完成任务后发送 “OK“确认。
+如果M1没有接收到M2的OK回应，那么M1怎么才能确认X是否被加过1了呢？X&#43;1的请求可能没有传输到M2，也有可能M2处理的太慢，很久才回复，也有可能M2处理了，但是OK消息在回传M1时遇到网络故障传送失败了。在很多时候，我们会对网络请求进行超时(Time out)处理，那M1的请求超时后可能会重新发送X&#43;1的请求，很明显，这样会容易导致X被执行了两次&#43;1。超时机制并不能帮我们识别失败发生在哪里了。这些不确定性也正是分布式系统不可避免的。
+我们可以通过统计手段，找出一个分布式系统内正常情况下最大的超时时间：比如1s内正常的网络请求都能够完成，这样当故障发生时可以帮我们排除一些失败，但是并不能帮我们排除所有的失败的可能。所以一个系统发生了延时，也会给我们带来无尽的麻烦。
+分布式系统 = 局部失败 &#43; 无尽的延时。
+分布式系统这么复杂，为什么还要使用它？ #  的确如此，分布式系统无论是开发起来，还是debug都很复杂，但是">
+<meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="1. 什么是和为什么分布式系统？时间和时钟。" />
+<meta property="og:description" content="1. 什么是和为什么分布式系统？时间和时钟。 #  什么是分布式系统 #   一个系统通过网络连接运行在多个的节点上 分布式系统的主要特点之一是局部失败(Partial Failure)  局部失败 #  运行在多个节点上的定义应该很好理解，第2点的局部失败又是什么呢？
+对于单个节点，或者说单台机器，如果失败了，一般重启也就能解决问题。但是对于多个节点构成的集群系统，如果集群中的个别机器失败了，很明显，将集群重启并不是很理想的做法。对于分布式系统而言，尽管存在一些失败的节点，整个系统需要保证依旧正常运行。而局部失败是不可避免的，比如网络故障，硬盘机械故障等等，所以说分布式系统的主要特点之一是局部失败。
+高性能计算(HPC, High performance computing) #  相较于分布式系统，HPC往往将局部失败当作整体失败(total failure)对待，而分布式系统在局部失败时需要正常运转。
+分布式系统会有些Failure #  假设我的系统由两台机器M1, M2组成，M2中存储了X的值，如果M1想知道X的值，便会向M2发起请求，那么会有哪些情形发生呢？
+可能的情形有：
+ 从 M1发送的消息在传输过程中丢失。 M1的消息发送后很长时间才被M2接收。比如网络延时，或者 M2有消息队列积压较多。 M2宕机了。  那M1将消息发出后，它能感知到上面的情形么？实际上还有些情形比如
+ M2回复的很慢 M2的回复在回传过程中丢失了  很明显，M1在发出消息后如果没有接收到回应，M1自身是不可能感知到是出了什么问题的，除非有一个掌控全局的观察者告诉M1发生了什么。
+还存在其他的问题么？
+ M2可能撒谎，X明明是3，却说X等于5 M2可能拒绝回答。 可能有宇宙射线，传送过程中将X的值置成了错误的值。 &hellip;  上述的这些问题叫做拜占庭故障(Byzantine faults)， 而且都是在真正的分布式系统中可能发生的。比如分布式的货币系统（比特币），每个用户系统都记录了其他用户的余额，如果有些用户的系统被黑客攻击了，对金额撒谎怎么办？
+网络超时 #  M1此时发送消息给M2要求把X的值&#43;1，M2在完成任务后发送 “OK“确认。
+如果M1没有接收到M2的OK回应，那么M1怎么才能确认X是否被加过1了呢？X&#43;1的请求可能没有传输到M2，也有可能M2处理的太慢，很久才回复，也有可能M2处理了，但是OK消息在回传M1时遇到网络故障传送失败了。在很多时候，我们会对网络请求进行超时(Time out)处理，那M1的请求超时后可能会重新发送X&#43;1的请求，很明显，这样会容易导致X被执行了两次&#43;1。超时机制并不能帮我们识别失败发生在哪里了。这些不确定性也正是分布式系统不可避免的。
+我们可以通过统计手段，找出一个分布式系统内正常情况下最大的超时时间：比如1s内正常的网络请求都能够完成，这样当故障发生时可以帮我们排除一些失败，但是并不能帮我们排除所有的失败的可能。所以一个系统发生了延时，也会给我们带来无尽的麻烦。
+分布式系统 = 局部失败 &#43; 无尽的延时。
+分布式系统这么复杂，为什么还要使用它？ #  的确如此，分布式系统无论是开发起来，还是debug都很复杂，但是" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://distsystms.huadonghu.com/docs/distributed-systems-what-and-why-time-and-clocks/" />
+<meta property="article:published_time" content="2020-09-01T23:58:20-07:00" />
+<meta property="article:modified_time" content="2020-09-01T23:58:20-07:00" />
+<title>1. 什么是和为什么分布式系统？时间和时钟。 | 分布式系统概述</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/favicon.png" type="image/x-icon">
+<link rel="stylesheet" href="/book.min.891c5b58a7a694942d519238f3c4138504c9ad2e207c0fd6541f9cd4f8d6220a.css" integrity="sha256-iRxbWKemlJQtUZI488QThQTJrS4gfA/WVB&#43;c1PjWIgo=">
+<script defer src="/en.search.min.a11bce14b45c5aff67fd7c1055386de7bc7645033a9f7998b8d0fab98cc3a8e7.js" integrity="sha256-oRvOFLRcWv9n/XwQVTht57x2RQM6n3mYuND6uYzDqOc="></script>
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-131378726-6', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+  
+</head>
+
+<body dir=>
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      
+  <nav>
+<h2 class="book-brand">
+  <a href="/"><span>分布式系统概述</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/case-study-amazons-dynamodb/" class="">14. Case study: Amazon&#39;s DynamoDB</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/eventual-consistency/" class="">13. 最终一致性(eventual consistency)，CAP理论</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/replications-and-consistency/" class="">11. 冗余备份(Replications)与一致性(Consistency)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/implementation-of-reliable-delivery/" class="">10. 实现可靠消息交付</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/reliable-delivery/" class="">9. 可靠消息交付</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/safety-liveness/" class="">8. Safety 和 Liveness</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/chandylamport-snapshot-algorithm/" class="">7. Chandy-Lamport快照(Snapshot)算法</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/consensus/" class="">12. 分布式共识算法</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/message-delivery/" class="">6. 消息交付(Message Delivery)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/raft/" class="">分布式共识算法-Raft</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/protocol-lamport-diagram/" class="">5. 网络协议(Protocol)与Lamport diagram</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/vector-clock/" class="">4. 向量时钟(Vector Clock)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/lamport-clocks/" class="">3. Lamport时钟(Lamport clocks)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/lamport-diagrams-happensbefore-partial-order/" class="">2. Lamport Diagrams，Happens-before，同步网络与异步网络，偏序关系</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/distributed-systems-what-and-why-time-and-clocks/" class=" active">1. 什么是和为什么分布式系统？时间和时钟。</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/paxos/" class="">分布式共识算法-Paxos</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var menu=document.querySelector("aside.book-menu nav");addEventListener("beforeunload",function(event){localStorage.setItem("menu.scrollTop",menu.scrollTop);});menu.scrollTop=localStorage.getItem("menu.scrollTop");})();</script>
+
+
+ 
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <strong>1. 什么是和为什么分布式系统？时间和时钟。</strong>
+
+  <label for="toc-control">
+    
+    <img src="/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#什么是分布式系统">什么是分布式系统</a>
+      <ul>
+        <li><a href="#局部失败">局部失败</a></li>
+        <li><a href="#高性能计算hpc-high-performance-computing">高性能计算(HPC, High performance computing)</a></li>
+        <li><a href="#分布式系统会有些failure">分布式系统会有些Failure</a></li>
+        <li><a href="#网络超时">网络超时</a></li>
+        <li><a href="#分布式系统这么复杂为什么还要使用它">分布式系统这么复杂，为什么还要使用它？</a></li>
+      </ul>
+    </li>
+    <li><a href="#时间和时钟">时间和时钟</a></li>
+  </ul>
+</nav>
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown"><h1 id="1-什么是和为什么分布式系统时间和时钟">
+  1. 什么是和为什么分布式系统？时间和时钟。
+  <a class="anchor" href="#1-%e4%bb%80%e4%b9%88%e6%98%af%e5%92%8c%e4%b8%ba%e4%bb%80%e4%b9%88%e5%88%86%e5%b8%83%e5%bc%8f%e7%b3%bb%e7%bb%9f%e6%97%b6%e9%97%b4%e5%92%8c%e6%97%b6%e9%92%9f">#</a>
+</h1>
+<h2 id="什么是分布式系统">
+  什么是分布式系统
+  <a class="anchor" href="#%e4%bb%80%e4%b9%88%e6%98%af%e5%88%86%e5%b8%83%e5%bc%8f%e7%b3%bb%e7%bb%9f">#</a>
+</h2>
+<ol>
+<li>一个系统通过网络连接运行在多个的节点上</li>
+<li>分布式系统的主要特点之一是局部失败(Partial Failure)</li>
+</ol>
+<h3 id="局部失败">
+  局部失败
+  <a class="anchor" href="#%e5%b1%80%e9%83%a8%e5%a4%b1%e8%b4%a5">#</a>
+</h3>
+<p>运行在多个节点上的定义应该很好理解，第2点的局部失败又是什么呢？</p>
+<p>对于单个节点，或者说单台机器，如果失败了，一般重启也就能解决问题。但是对于多个节点构成的集群系统，如果集群中的个别机器失败了，很明显，将集群重启并不是很理想的做法。对于分布式系统而言，尽管存在一些失败的节点，整个系统需要保证依旧正常运行。而局部失败是不可避免的，比如网络故障，硬盘机械故障等等，所以说分布式系统的主要特点之一是局部失败。</p>
+<h3 id="高性能计算hpc-high-performance-computing">
+  高性能计算(HPC, High performance computing)
+  <a class="anchor" href="#%e9%ab%98%e6%80%a7%e8%83%bd%e8%ae%a1%e7%ae%97hpc-high-performance-computing">#</a>
+</h3>
+<p>相较于分布式系统，HPC往往将局部失败当作整体失败(total failure)对待，而分布式系统在局部失败时需要正常运转。</p>
+<h3 id="分布式系统会有些failure">
+  分布式系统会有些Failure
+  <a class="anchor" href="#%e5%88%86%e5%b8%83%e5%bc%8f%e7%b3%bb%e7%bb%9f%e4%bc%9a%e6%9c%89%e4%ba%9bfailure">#</a>
+</h3>
+<p>假设我的系统由两台机器M1, M2组成，M2中存储了X的值，如果M1想知道X的值，便会向M2发起请求，那么会有哪些情形发生呢？</p>
+<p><img src="https://files.huadonghu.com/20200521/Jz13QJ.jpg" alt="" /></p>
+<p>可能的情形有：</p>
+<ol>
+<li>从 M1发送的消息在传输过程中丢失。</li>
+<li>M1的消息发送后很长时间才被M2接收。比如网络延时，或者 M2有消息队列积压较多。</li>
+<li>M2宕机了。</li>
+</ol>
+<p>那M1将消息发出后，它能感知到上面的情形么？实际上还有些情形比如</p>
+<ol>
+<li>M2回复的很慢</li>
+<li>M2的回复在回传过程中丢失了</li>
+</ol>
+<p>很明显，M1在发出消息后如果没有接收到回应，M1自身是不可能感知到是出了什么问题的，除非有一个掌控全局的观察者告诉M1发生了什么。</p>
+<p>还存在其他的问题么？</p>
+<ul>
+<li>M2可能撒谎，X明明是3，却说X等于5</li>
+<li>M2可能拒绝回答。</li>
+<li>可能有宇宙射线，传送过程中将X的值置成了错误的值。</li>
+<li>&hellip;</li>
+</ul>
+<p>上述的这些问题叫做拜占庭故障(Byzantine faults)， 而且都是在真正的分布式系统中可能发生的。比如分布式的货币系统（比特币），每个用户系统都记录了其他用户的余额，如果有些用户的系统被黑客攻击了，对金额撒谎怎么办？</p>
+<h3 id="网络超时">
+  网络超时
+  <a class="anchor" href="#%e7%bd%91%e7%bb%9c%e8%b6%85%e6%97%b6">#</a>
+</h3>
+<p>M1此时发送消息给M2要求把X的值+1，M2在完成任务后发送 “OK“确认。</p>
+<p><img src="https://files.huadonghu.com/20200521/Sof6lt.jpg" alt="" /></p>
+<p>如果M1没有接收到M2的OK回应，那么M1怎么才能确认X是否被加过1了呢？X+1的请求可能没有传输到M2，也有可能M2处理的太慢，很久才回复，也有可能M2处理了，但是OK消息在回传M1时遇到网络故障传送失败了。在很多时候，我们会对网络请求进行超时(Time out)处理，那M1的请求超时后可能会重新发送X+1的请求，很明显，这样会容易导致X被执行了两次+1。超时机制并不能帮我们识别失败发生在哪里了。这些不确定性也正是分布式系统不可避免的。</p>
+<p>我们可以通过统计手段，找出一个分布式系统内正常情况下最大的超时时间：比如1s内正常的网络请求都能够完成，这样当故障发生时可以帮我们排除一些失败，但是并不能帮我们排除所有的失败的可能。所以一个系统发生了延时，也会给我们带来无尽的麻烦。</p>
+<p><strong>分布式系统 = 局部失败 + 无尽的延时。</strong></p>
+<h3 id="分布式系统这么复杂为什么还要使用它">
+  分布式系统这么复杂，为什么还要使用它？
+  <a class="anchor" href="#%e5%88%86%e5%b8%83%e5%bc%8f%e7%b3%bb%e7%bb%9f%e8%bf%99%e4%b9%88%e5%a4%8d%e6%9d%82%e4%b8%ba%e4%bb%80%e4%b9%88%e8%bf%98%e8%a6%81%e4%bd%bf%e7%94%a8%e5%ae%83">#</a>
+</h3>
+<p>的确如此，分布式系统无论是开发起来，还是debug都很复杂，但是</p>
+<ul>
+<li>数据可能太大了，一台机器放不下，我们不得不分布式</li>
+<li>可能单台机器算的太慢了，我们想加快运算</li>
+</ul>
+<h2 id="时间和时钟">
+  时间和时钟
+  <a class="anchor" href="#%e6%97%b6%e9%97%b4%e5%92%8c%e6%97%b6%e9%92%9f">#</a>
+</h2>
+<p>计算的时候，时钟被用来干嘛了？</p>
+<ol>
+<li>用于标定时间。比如，晚上9:00去机场，浏览器缓存到4月1号0点过期。</li>
+<li>时间段或者间隔。比如去机场要45分钟，浏览器缓存在1天后过期。</li>
+</ol>
+<p>其实上面的表述中，“晚上9:00去机场，浏览器缓存到4月1号0点过期。“ 用的都是自然天时钟(time-of-day clock)，我们也知道可以用网络时间协议(NTP,The Network Time Protocol)进行服务器之间的时间同步。然而，自然天时钟用于标定时间很好，但是不适合用于表示时间段或者间隔。</p>
+<p>单调时钟(Monotonic clock)。单调时钟只往前走不往后，比如系统开机后经过了多长时间就是个单调时钟， UNIX时间戳(Time Stamp)也是单调时钟。单调时钟很适合用于表示时间段或者间隔，但是不适合标定时间。</p>
+<p>关于非单调时钟的问题，感兴趣的同学可以阅读CloudFare因为非单调时钟导致的一次故障：<a href="https://blog.cloudflare.com/how-and-why-the-leap-second-affected-cloudflare-dns/">https://blog.cloudflare.com/how-and-why-the-leap-second-affected-cloudflare-dns/</a></p>
+<p>上述的两种时钟都是物理时钟，在分布式系统中，我们需要一种新的时钟，逻辑时钟。</p>
+<p>逻辑时钟仅仅用来标注事件的发生顺序，最基本的讨论点就是哪个事件先发生的。</p>
+<p>比如说，M1机器需要从M2读X， M3需要修改M2的X，那我们就很有必要搞清楚哪个事件先发生的。</p>
+<p><img src="https://files.huadonghu.com/20200521/09yo9A.jpg" alt="" /></p>
+<p>来思考一个逻辑问题， 如果A早于B发生，那我们可以推出什么样的因果关系？</p>
+<ol>
+<li>A 可能导致了B</li>
+<li>B不可能导致A</li>
+</ol>
+<p>这种基于时序的推理很有利于系统的开发和debug。 如果A先于B发生，我们开发的系统就不能让用户知道是B在A之前发生。</p>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+
+
+
+</div>
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "distributed-system" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#什么是分布式系统">什么是分布式系统</a>
+      <ul>
+        <li><a href="#局部失败">局部失败</a></li>
+        <li><a href="#高性能计算hpc-high-performance-computing">高性能计算(HPC, High performance computing)</a></li>
+        <li><a href="#分布式系统会有些failure">分布式系统会有些Failure</a></li>
+        <li><a href="#网络超时">网络超时</a></li>
+        <li><a href="#分布式系统这么复杂为什么还要使用它">分布式系统这么复杂，为什么还要使用它？</a></li>
+      </ul>
+    </li>
+    <li><a href="#时间和时钟">时间和时钟</a></li>
+  </ul>
+</nav>
+
+ 
+    </aside>
+    
+  </main>
+
+  
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

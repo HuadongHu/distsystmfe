@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en" dir=>
+
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="11. 冗余备份(Replications)与一致性(Consistency) #  为什么做备份 #  首先我们思考一个问题，为什么要做备份？
+ 减少数据丢失。其实是增加容错的能力，多份备份的容错能力强于一份数据。 数据的本地化(Data Localiity)。用户优先访问离他物理距离近的备份加快访问速度。 可拓展性(Scalability)。可以支持更多的请求访问，或者说让更多的节点分担工作。  对数据做备份的好处是显而易见的，但是做备份是有代价的：
+ 我们需要保证备份间数据的一致性，这点下面会重点讨论。 昂贵的。我们需要购买更多的服务器或者云服务去支持备份。  一致性(Consistency) #  我们再看次违背total order delivery的例子：
+R1， R2两个备份保存的X值最终没有一致，这就是违背了一致性原则。
+其实一致性不光出现在多个备份时，单个节点时一样存在一致性的问题，比如下面的例子：
+上面的两个例子中，都只有一个备份R(严格意义上讲，不能叫做备份)，两个客户端C1，C2。C1和C2同时发起修改X的请求，但是却导致了两种结果。
+那这两个例子是否违背了total order delivery呢？显然没有，total order delivery （TO）是要求多个进程间的交付顺序一致，而我们这里两个例子都只有一个进程进行消息交付。
+上面的这种现象我们称作违背了决定论（determinism）。determinism是用来描述系统多次运行的结果的。我们发现TO是可以描述一次系统运行的性质，而determinism是可以描述多次运行。这里很晦涩，可以略过不做深入理解。
+所以，如果只有一个节点，一个备份的情况下，不违背total order delivery很简单，那么如果我们能在有多个备份的情况下，使得客户端意识不到存在多个备份还继续保持total order delivery那真的太美妙了。
+这里就可以给出强一致(Strong Consistency)的一个非正式的定义：如果客户端无法感知到提供服务的多备份的系统是有多个备份的，那么这个系统就是强一致的。
+那么回到多备份的情况下，一个很容易出现的错误如下：
+客户端发送的设置X的值请求被发送给R1，但是查询X的请求却发送给了R2。这种错误我们称作读自己写异常(Read your Write Anomoly)。
+有同学可能会指出，R1在接收到C1的消息后，可以转发给R2。这是一种解决方案，但是还是可能有问题。
+再举个例子：
+假设一个用户有两个客户端C1，C2，同时银行有两个备份R1，R2，C1发起存款50后，又发起提现40。R1转发了这两条消息给R2，但是最终交付的时候是提现40先进行了交付。C2查询银行余额时可能就会出现-40元。
+那么上面画圈的部分是发生了什么异常呢？这个我们之前学习过，是违背了FIFO delivery。
+在一致性的概念里，上面的例子违背了FIFO 一致性。
+FIFO Consistency：一个进程P完成的写操作顺序，其他所有进程接收到写顺序应该和P保持一致。
+我们继续看银行的例子：
+我们看下事情经过：用户通过客户端C1存款50， 再通过客户端询问余额，答复还有余额50，然后发起取现40，却发现完成不了。
+C2实际上没有做错任何事情，问题在于备份2并没有看到完整的事件因果。这种一致称作因果一致性。
+Casual Consistency: 所有的写操作如果存在因果关系，那么所有的进程都应该看到这样的因果关系。
+我们来总结下一致性的一些层级：
+不同的系统会采取不同的一致性，有时候我们会采取相对弱的一致而不是一致性越强越好，这个在后面我们会探讨。
+实现强一致 #  第一种强一致的实现方式叫做主备模式(Primary-backup replication)。这种模式下只有主节点进行写操作，同时将写操作广播到备份节点。主节点还进行读操作。">
+<meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="11. 冗余备份(Replications)与一致性(Consistency)" />
+<meta property="og:description" content="11. 冗余备份(Replications)与一致性(Consistency) #  为什么做备份 #  首先我们思考一个问题，为什么要做备份？
+ 减少数据丢失。其实是增加容错的能力，多份备份的容错能力强于一份数据。 数据的本地化(Data Localiity)。用户优先访问离他物理距离近的备份加快访问速度。 可拓展性(Scalability)。可以支持更多的请求访问，或者说让更多的节点分担工作。  对数据做备份的好处是显而易见的，但是做备份是有代价的：
+ 我们需要保证备份间数据的一致性，这点下面会重点讨论。 昂贵的。我们需要购买更多的服务器或者云服务去支持备份。  一致性(Consistency) #  我们再看次违背total order delivery的例子：
+R1， R2两个备份保存的X值最终没有一致，这就是违背了一致性原则。
+其实一致性不光出现在多个备份时，单个节点时一样存在一致性的问题，比如下面的例子：
+上面的两个例子中，都只有一个备份R(严格意义上讲，不能叫做备份)，两个客户端C1，C2。C1和C2同时发起修改X的请求，但是却导致了两种结果。
+那这两个例子是否违背了total order delivery呢？显然没有，total order delivery （TO）是要求多个进程间的交付顺序一致，而我们这里两个例子都只有一个进程进行消息交付。
+上面的这种现象我们称作违背了决定论（determinism）。determinism是用来描述系统多次运行的结果的。我们发现TO是可以描述一次系统运行的性质，而determinism是可以描述多次运行。这里很晦涩，可以略过不做深入理解。
+所以，如果只有一个节点，一个备份的情况下，不违背total order delivery很简单，那么如果我们能在有多个备份的情况下，使得客户端意识不到存在多个备份还继续保持total order delivery那真的太美妙了。
+这里就可以给出强一致(Strong Consistency)的一个非正式的定义：如果客户端无法感知到提供服务的多备份的系统是有多个备份的，那么这个系统就是强一致的。
+那么回到多备份的情况下，一个很容易出现的错误如下：
+客户端发送的设置X的值请求被发送给R1，但是查询X的请求却发送给了R2。这种错误我们称作读自己写异常(Read your Write Anomoly)。
+有同学可能会指出，R1在接收到C1的消息后，可以转发给R2。这是一种解决方案，但是还是可能有问题。
+再举个例子：
+假设一个用户有两个客户端C1，C2，同时银行有两个备份R1，R2，C1发起存款50后，又发起提现40。R1转发了这两条消息给R2，但是最终交付的时候是提现40先进行了交付。C2查询银行余额时可能就会出现-40元。
+那么上面画圈的部分是发生了什么异常呢？这个我们之前学习过，是违背了FIFO delivery。
+在一致性的概念里，上面的例子违背了FIFO 一致性。
+FIFO Consistency：一个进程P完成的写操作顺序，其他所有进程接收到写顺序应该和P保持一致。
+我们继续看银行的例子：
+我们看下事情经过：用户通过客户端C1存款50， 再通过客户端询问余额，答复还有余额50，然后发起取现40，却发现完成不了。
+C2实际上没有做错任何事情，问题在于备份2并没有看到完整的事件因果。这种一致称作因果一致性。
+Casual Consistency: 所有的写操作如果存在因果关系，那么所有的进程都应该看到这样的因果关系。
+我们来总结下一致性的一些层级：
+不同的系统会采取不同的一致性，有时候我们会采取相对弱的一致而不是一致性越强越好，这个在后面我们会探讨。
+实现强一致 #  第一种强一致的实现方式叫做主备模式(Primary-backup replication)。这种模式下只有主节点进行写操作，同时将写操作广播到备份节点。主节点还进行读操作。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://distsystms.huadonghu.com/docs/replications-and-consistency/" />
+<meta property="article:published_time" content="2020-09-11T23:58:20-07:00" />
+<meta property="article:modified_time" content="2020-09-11T23:58:20-07:00" />
+<title>11. 冗余备份(Replications)与一致性(Consistency) | 分布式系统概述</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/favicon.png" type="image/x-icon">
+<link rel="stylesheet" href="/book.min.891c5b58a7a694942d519238f3c4138504c9ad2e207c0fd6541f9cd4f8d6220a.css" integrity="sha256-iRxbWKemlJQtUZI488QThQTJrS4gfA/WVB&#43;c1PjWIgo=">
+<script defer src="/en.search.min.a11bce14b45c5aff67fd7c1055386de7bc7645033a9f7998b8d0fab98cc3a8e7.js" integrity="sha256-oRvOFLRcWv9n/XwQVTht57x2RQM6n3mYuND6uYzDqOc="></script>
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-131378726-6', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+  
+</head>
+
+<body dir=>
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      
+  <nav>
+<h2 class="book-brand">
+  <a href="/"><span>分布式系统概述</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/case-study-amazons-dynamodb/" class="">14. Case study: Amazon&#39;s DynamoDB</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/eventual-consistency/" class="">13. 最终一致性(eventual consistency)，CAP理论</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/replications-and-consistency/" class=" active">11. 冗余备份(Replications)与一致性(Consistency)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/implementation-of-reliable-delivery/" class="">10. 实现可靠消息交付</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/reliable-delivery/" class="">9. 可靠消息交付</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/safety-liveness/" class="">8. Safety 和 Liveness</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/chandylamport-snapshot-algorithm/" class="">7. Chandy-Lamport快照(Snapshot)算法</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/consensus/" class="">12. 分布式共识算法</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/message-delivery/" class="">6. 消息交付(Message Delivery)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/raft/" class="">分布式共识算法-Raft</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/protocol-lamport-diagram/" class="">5. 网络协议(Protocol)与Lamport diagram</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/vector-clock/" class="">4. 向量时钟(Vector Clock)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/lamport-clocks/" class="">3. Lamport时钟(Lamport clocks)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/lamport-diagrams-happensbefore-partial-order/" class="">2. Lamport Diagrams，Happens-before，同步网络与异步网络，偏序关系</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/distributed-systems-what-and-why-time-and-clocks/" class="">1. 什么是和为什么分布式系统？时间和时钟。</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/paxos/" class="">分布式共识算法-Paxos</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var menu=document.querySelector("aside.book-menu nav");addEventListener("beforeunload",function(event){localStorage.setItem("menu.scrollTop",menu.scrollTop);});menu.scrollTop=localStorage.getItem("menu.scrollTop");})();</script>
+
+
+ 
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <strong>11. 冗余备份(Replications)与一致性(Consistency)</strong>
+
+  <label for="toc-control">
+    
+    <img src="/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#为什么做备份">为什么做备份</a></li>
+    <li><a href="#一致性consistency">一致性(Consistency)</a></li>
+    <li><a href="#实现强一致">实现强一致</a></li>
+  </ul>
+</nav>
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown"><h1 id="11-冗余备份replications与一致性consistency">
+  11. 冗余备份(Replications)与一致性(Consistency)
+  <a class="anchor" href="#11-%e5%86%97%e4%bd%99%e5%a4%87%e4%bb%bdreplications%e4%b8%8e%e4%b8%80%e8%87%b4%e6%80%a7consistency">#</a>
+</h1>
+<h2 id="为什么做备份">
+  为什么做备份
+  <a class="anchor" href="#%e4%b8%ba%e4%bb%80%e4%b9%88%e5%81%9a%e5%a4%87%e4%bb%bd">#</a>
+</h2>
+<p>首先我们思考一个问题，为什么要做备份？</p>
+<ol>
+<li>减少数据丢失。其实是增加容错的能力，多份备份的容错能力强于一份数据。</li>
+<li>数据的本地化(Data Localiity)。用户优先访问离他物理距离近的备份加快访问速度。</li>
+<li>可拓展性(Scalability)。可以支持更多的请求访问，或者说让更多的节点分担工作。</li>
+</ol>
+<p>对数据做备份的好处是显而易见的，但是做备份是有代价的：</p>
+<ol>
+<li>我们需要保证备份间数据的一致性，这点下面会重点讨论。</li>
+<li>昂贵的。我们需要购买更多的服务器或者云服务去支持备份。</li>
+</ol>
+<h2 id="一致性consistency">
+  一致性(Consistency)
+  <a class="anchor" href="#%e4%b8%80%e8%87%b4%e6%80%a7consistency">#</a>
+</h2>
+<p>我们再看次违背total order delivery的例子：</p>
+<p><img src="https://files.huadonghu.com/20200525/dkDexu.png" alt="" /></p>
+<p>R1， R2两个备份保存的X值最终没有一致，这就是违背了一致性原则。</p>
+<p>其实一致性不光出现在多个备份时，单个节点时一样存在一致性的问题，比如下面的例子：</p>
+<p><img src="https://files.huadonghu.com/20200603/3AZZK6.png" alt="" /></p>
+<p>上面的两个例子中，都只有一个备份R(严格意义上讲，不能叫做备份)，两个客户端C1，C2。C1和C2同时发起修改X的请求，但是却导致了两种结果。</p>
+<p>那这两个例子是否违背了total order delivery呢？显然没有，total order delivery （TO）是要求多个进程间的交付顺序一致，而我们这里两个例子都只有一个进程进行消息交付。</p>
+<p>上面的这种现象我们称作违背了决定论（determinism）。determinism是用来描述系统多次运行的结果的。我们发现TO是可以描述一次系统运行的性质，而determinism是可以描述多次运行。这里很晦涩，可以略过不做深入理解。</p>
+<p>所以，如果只有一个节点，一个备份的情况下，不违背total order delivery很简单，那么如果我们能在有多个备份的情况下，使得客户端意识不到存在多个备份还继续保持total order delivery那真的太美妙了。</p>
+<p>这里就可以给出强一致(Strong Consistency)的一个非正式的定义：如果客户端无法感知到提供服务的多备份的系统是有多个备份的，那么这个系统就是强一致的。</p>
+<p>那么回到多备份的情况下，一个很容易出现的错误如下：</p>
+<p><img src="https://files.huadonghu.com/20200603/ixvWYY.png" alt="" /></p>
+<p>客户端发送的设置X的值请求被发送给R1，但是查询X的请求却发送给了R2。这种错误我们称作读自己写异常(Read your Write Anomoly)。</p>
+<p>有同学可能会指出，R1在接收到C1的消息后，可以转发给R2。这是一种解决方案，但是还是可能有问题。</p>
+<p>再举个例子：</p>
+<p><img src="https://files.huadonghu.com/20200603/D7cAhO.png" alt="" /></p>
+<p>假设一个用户有两个客户端C1，C2，同时银行有两个备份R1，R2，C1发起存款50后，又发起提现40。R1转发了这两条消息给R2，但是最终交付的时候是提现40先进行了交付。C2查询银行余额时可能就会出现-40元。</p>
+<p><img src="https://files.huadonghu.com/20200603/gJdKUe.png?123" alt="" /></p>
+<p>那么上面画圈的部分是发生了什么异常呢？这个我们之前学习过，是违背了FIFO delivery。</p>
+<p>在一致性的概念里，上面的例子违背了FIFO 一致性。</p>
+<p>FIFO Consistency：一个进程P完成的写操作顺序，其他所有进程接收到写顺序应该和P保持一致。</p>
+<p>我们继续看银行的例子：</p>
+<p><img src="https://files.huadonghu.com/20200603/HW1ZrB.png" alt="" /></p>
+<p>我们看下事情经过：用户通过客户端C1存款50， 再通过客户端询问余额，答复还有余额50，然后发起取现40，却发现完成不了。</p>
+<p>C2实际上没有做错任何事情，问题在于备份2并没有看到完整的事件因果。这种一致称作因果一致性。</p>
+<p>Casual Consistency: 所有的写操作如果存在因果关系，那么所有的进程都应该看到这样的因果关系。</p>
+<p>我们来总结下一致性的一些层级：</p>
+<p><img src="https://files.huadonghu.com/20200603/FAvT1t.png?x" alt="" /></p>
+<p>不同的系统会采取不同的一致性，有时候我们会采取相对弱的一致而不是一致性越强越好，这个在后面我们会探讨。</p>
+<h2 id="实现强一致">
+  实现强一致
+  <a class="anchor" href="#%e5%ae%9e%e7%8e%b0%e5%bc%ba%e4%b8%80%e8%87%b4">#</a>
+</h2>
+<p>第一种强一致的实现方式叫做主备模式(Primary-backup replication)。这种模式下只有主节点进行写操作，同时将写操作广播到备份节点。主节点还进行读操作。</p>
+<p><img src="https://files.huadonghu.com/20200603/o21xxq.png?x" alt="" /></p>
+<p>C1的请求发送到Primary后，Primary将消息广播到B1和B2，B1 B2分别ACK后，Primary再将X的值写入（图中标黄的地方，这个点称作提交点，Commit point），最后Primary发送ACK给C1。</p>
+<p><img src="https://files.huadonghu.com/20200603/CFkVju.png" alt="" /></p>
+<p>最后C1询问X的值，Primary作出回应。</p>
+<p>这个算法很简答，上个世纪70年代就被提出来了。我们可以观察到在任意时刻，备份的数据是不老于主节点的，甚至比主节点还要新。</p>
+<p>那这个算法的缺点呢？</p>
+<p>首先，主节点是瓶颈。</p>
+<p>我们再对照着文章开始提出的为什么要备份，看看这个算法解决了哪些？</p>
+<ol>
+<li>减少数据丢失。其实是增加容错的能力，多份备份的容错能力强于一份数据。</li>
+<li>数据的本地化(Data Localiity)。用户优先访问离他物理距离近的备份加快访问速度。</li>
+<li>可拓展性(Scalability)。可以支持更多的请求访问，或者说让更多的节点分担工作。</li>
+</ol>
+<p>减少数据丢失, 增加容错的能力显然是可以做到的，任一时刻如果主节点崩溃了，任一一个备份节点可以做主节点。</p>
+<p>数据的本地化呢？并没有，因为任何地区访问的都是主节点。</p>
+<p>可拓展性呢？或者称作水平拓展，其实也没有，所有的读写请求在由主节点承担了。</p>
+<p>那能不能改变一下上面的算法，使得其表现的更好？有一个思路就是能不能实现读写分离。一个节点负责写操作，一个节点负责读操作。</p>
+<p>下面的算法称作链式复制(Chain Replication)，Primary节点作为写节点，链式转发到各个备份节点，最后的备份作为读节点。</p>
+<p><img src="https://files.huadonghu.com/20200603/RVVC6a.png" alt="" /></p>
+<p>这篇论文发表在 2004， 叫做 Chain replication for supporting high throughput and availability， 链式复制以支持高吞吐和高可用。</p>
+<p><img src="https://files.huadonghu.com/20200603/9vwN2g.png" alt="" /></p>
+<p>Primary节点又叫做头节点(head), 而最后一个备份叫做尾节点(Tail)。</p>
+<p>相较于主备模式只有一个节点进行读写操作，链式备份有两个节点分别进行读写，所以理论上的吞吐量会增加。吞吐(Throughput)是指单位时间内完成的动作。</p>
+<p>但是我们看下另一个指标，延时(latency)：延时是指动作发起到完成后的时间。</p>
+<p>在主备模式中，由发送消息给主节点+主节点广播(并行的)+最长的ack+回复消息给客户端，4条消息完成，但是在链式备份中，由发送消息给头节点+n条链传递+尾节点ack，主要取决为备份的数量，所以链式备份的写延时会很有可能高于主备模式。</p>
+<p>但延时在两种模式下是几乎一样的。</p>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+
+
+
+</div>
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "distributed-system" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#为什么做备份">为什么做备份</a></li>
+    <li><a href="#一致性consistency">一致性(Consistency)</a></li>
+    <li><a href="#实现强一致">实现强一致</a></li>
+  </ul>
+</nav>
+
+ 
+    </aside>
+    
+  </main>
+
+  
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

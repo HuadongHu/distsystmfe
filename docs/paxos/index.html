@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en" dir=>
+
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="分布式共识算法-Paxos #  Paxos是最著名的分布式共识算法之一。这里介绍一下这个算法。
+Paxos的角色 #   Proposer，提议者 - 发起提议 Acceptor，接受者，对于Proposer提议的Value作出决定。 Learner，学习者，学习已经达成一直的Value。  当我们使用Lamport Diagram来表现Paxos的时候，为了理解方便，我们需要将上面的三种角色分开来用不同的进程表示，但是实际运行中一个进程可以扮演多个角色。
+一个问题是Paxos的节点是需要提前知道有多少个Accpetor的，因为要达成一致，需要知道有大于等于一半的Acppetor同意。
+在介绍具体算法前，这里先澄清下，我们接下来先讨论的是对单个值达成共识，而对于一系列的值达成共识会在更后面进行介绍。
+算法运行 #  假设某一时刻一个Proposer, P1，想要提议一个值，首先它需要做的是发送一条Prepare消息到至少众数的Accpetor那里。
+发送的Prepare消息的同时需要携带上唯一的提议号，Proposal Number。这个Proposal Number需要时全局唯一的，也就是说一旦一个Proposer使用过了这个提议号，那么其他的Proposal就不能再使用。所以如果有两个Proposer，一个简单的方式就是分别使用奇偶不同的Proposal Number。
+Proposal Number的另一个要求是必须是单调增的，也就说新的Proposal Number必须比已经使用过的Proposal Number来的大。
+当一个Acceptor接受到了一条Prepare消息后，它需要看一下这个proposal number：
+ 如果之前没有对这个proposal number作出过承诺，那么就回复给Proposer一条Promise消息。 如果之前已经承诺过这个proposal number，那么直接丢弃这条Prepare消息。  上面的例子中Proposer P1给AcceptorA1, A2发送了Prepare 5的消息，这里其实也可以发送给A3，但是为了简化，只发送给了A1， A2，但是也达到了众数，所以是正确的，现实中也可能是消息丢失了最终只有A1和A2接收到了这条Prepare消息。
+A1和A2都没有对5作出过承诺，所以会回复Promise 5的消息。
+这里我们就已经达成了第一个里程碑： 众数个的Acceptor承诺了一个proposal number。如果此时还有其他Proposer发送prepare 4或者prepare 5，都不会被Acceptor承诺。
+Proposer P1此时接收到了众数个的Promise消息，于是它可以发送给accept消息给众数个的Acceptor。Accept消息包含proposal number和实际上需要进行提议的数值。
+P1提议的值是1所以accept消息包含proposal number 5和要提议的值1。而Acceptor在接收到accept消息，询问自己是否对这个proposal number作出个承诺，
+ 如果YES，则接受这条accept消息，回复一条accepted消息给Proposer和所有的Learners。 如果NO，忽略这条accpet消息。  众数的Acceptor发送了accepted消息后的这个时刻，系统就达成共识。🎉。
+上面就是一个简单的Paxos算法运行的过程。
+达成共识的这个时刻，我们会发现其实系统中的每个节点并不是全部意识到了共识已经达成。最明显的就是A3，它什么都没收到！A1和A2发送了Accepted消息后，指导P1接收到了这两条消息才知道共识已经达成，而A1和A2此时还是浑然不知共识是否达成，因为他们不知道其他节点发送了什么消息。
+所以共识的达成和节点知道共识达成是两回事。
+P1只需要将消息发送给众数个节点的acceptor就能保证算法的正确性，但是如果P1能将消息发送给所有的acceptor的话会更好，因为存在消息丢失的可能性，所以消息发送给越多的acceptor，更容易使得众数个节点接收到消息。
+类似的，当P1从其acceptor接收到Promise消息时，它需要确保接收到了来自众数个节点的消息。当然，接收到全部的节点的消息更棒了！
+我们再来回顾下上面的算法，在系统达成一致的过程中，有哪些里程碑（milestones）的事件？用M表示。
+不难发现，第一个里程碑的达成是当众数个acceptor对一个提议号作出承诺的时候。">
+<meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="分布式共识算法-Paxos" />
+<meta property="og:description" content="分布式共识算法-Paxos #  Paxos是最著名的分布式共识算法之一。这里介绍一下这个算法。
+Paxos的角色 #   Proposer，提议者 - 发起提议 Acceptor，接受者，对于Proposer提议的Value作出决定。 Learner，学习者，学习已经达成一直的Value。  当我们使用Lamport Diagram来表现Paxos的时候，为了理解方便，我们需要将上面的三种角色分开来用不同的进程表示，但是实际运行中一个进程可以扮演多个角色。
+一个问题是Paxos的节点是需要提前知道有多少个Accpetor的，因为要达成一致，需要知道有大于等于一半的Acppetor同意。
+在介绍具体算法前，这里先澄清下，我们接下来先讨论的是对单个值达成共识，而对于一系列的值达成共识会在更后面进行介绍。
+算法运行 #  假设某一时刻一个Proposer, P1，想要提议一个值，首先它需要做的是发送一条Prepare消息到至少众数的Accpetor那里。
+发送的Prepare消息的同时需要携带上唯一的提议号，Proposal Number。这个Proposal Number需要时全局唯一的，也就是说一旦一个Proposer使用过了这个提议号，那么其他的Proposal就不能再使用。所以如果有两个Proposer，一个简单的方式就是分别使用奇偶不同的Proposal Number。
+Proposal Number的另一个要求是必须是单调增的，也就说新的Proposal Number必须比已经使用过的Proposal Number来的大。
+当一个Acceptor接受到了一条Prepare消息后，它需要看一下这个proposal number：
+ 如果之前没有对这个proposal number作出过承诺，那么就回复给Proposer一条Promise消息。 如果之前已经承诺过这个proposal number，那么直接丢弃这条Prepare消息。  上面的例子中Proposer P1给AcceptorA1, A2发送了Prepare 5的消息，这里其实也可以发送给A3，但是为了简化，只发送给了A1， A2，但是也达到了众数，所以是正确的，现实中也可能是消息丢失了最终只有A1和A2接收到了这条Prepare消息。
+A1和A2都没有对5作出过承诺，所以会回复Promise 5的消息。
+这里我们就已经达成了第一个里程碑： 众数个的Acceptor承诺了一个proposal number。如果此时还有其他Proposer发送prepare 4或者prepare 5，都不会被Acceptor承诺。
+Proposer P1此时接收到了众数个的Promise消息，于是它可以发送给accept消息给众数个的Acceptor。Accept消息包含proposal number和实际上需要进行提议的数值。
+P1提议的值是1所以accept消息包含proposal number 5和要提议的值1。而Acceptor在接收到accept消息，询问自己是否对这个proposal number作出个承诺，
+ 如果YES，则接受这条accept消息，回复一条accepted消息给Proposer和所有的Learners。 如果NO，忽略这条accpet消息。  众数的Acceptor发送了accepted消息后的这个时刻，系统就达成共识。🎉。
+上面就是一个简单的Paxos算法运行的过程。
+达成共识的这个时刻，我们会发现其实系统中的每个节点并不是全部意识到了共识已经达成。最明显的就是A3，它什么都没收到！A1和A2发送了Accepted消息后，指导P1接收到了这两条消息才知道共识已经达成，而A1和A2此时还是浑然不知共识是否达成，因为他们不知道其他节点发送了什么消息。
+所以共识的达成和节点知道共识达成是两回事。
+P1只需要将消息发送给众数个节点的acceptor就能保证算法的正确性，但是如果P1能将消息发送给所有的acceptor的话会更好，因为存在消息丢失的可能性，所以消息发送给越多的acceptor，更容易使得众数个节点接收到消息。
+类似的，当P1从其acceptor接收到Promise消息时，它需要确保接收到了来自众数个节点的消息。当然，接收到全部的节点的消息更棒了！
+我们再来回顾下上面的算法，在系统达成一致的过程中，有哪些里程碑（milestones）的事件？用M表示。
+不难发现，第一个里程碑的达成是当众数个acceptor对一个提议号作出承诺的时候。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://distsystms.huadonghu.com/docs/paxos/" />
+
+<title>分布式共识算法-Paxos | 分布式系统概述</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/favicon.png" type="image/x-icon">
+<link rel="stylesheet" href="/book.min.891c5b58a7a694942d519238f3c4138504c9ad2e207c0fd6541f9cd4f8d6220a.css" integrity="sha256-iRxbWKemlJQtUZI488QThQTJrS4gfA/WVB&#43;c1PjWIgo=">
+<script defer src="/en.search.min.a11bce14b45c5aff67fd7c1055386de7bc7645033a9f7998b8d0fab98cc3a8e7.js" integrity="sha256-oRvOFLRcWv9n/XwQVTht57x2RQM6n3mYuND6uYzDqOc="></script>
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-131378726-6', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+  
+</head>
+
+<body dir=>
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      
+  <nav>
+<h2 class="book-brand">
+  <a href="/"><span>分布式系统概述</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/case-study-amazons-dynamodb/" class="">14. Case study: Amazon&#39;s DynamoDB</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/eventual-consistency/" class="">13. 最终一致性(eventual consistency)，CAP理论</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/replications-and-consistency/" class="">11. 冗余备份(Replications)与一致性(Consistency)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/implementation-of-reliable-delivery/" class="">10. 实现可靠消息交付</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/reliable-delivery/" class="">9. 可靠消息交付</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/safety-liveness/" class="">8. Safety 和 Liveness</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/chandylamport-snapshot-algorithm/" class="">7. Chandy-Lamport快照(Snapshot)算法</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/consensus/" class="">12. 分布式共识算法</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/message-delivery/" class="">6. 消息交付(Message Delivery)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/raft/" class="">分布式共识算法-Raft</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/protocol-lamport-diagram/" class="">5. 网络协议(Protocol)与Lamport diagram</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/vector-clock/" class="">4. 向量时钟(Vector Clock)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/lamport-clocks/" class="">3. Lamport时钟(Lamport clocks)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/lamport-diagrams-happensbefore-partial-order/" class="">2. Lamport Diagrams，Happens-before，同步网络与异步网络，偏序关系</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/distributed-systems-what-and-why-time-and-clocks/" class="">1. 什么是和为什么分布式系统？时间和时钟。</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/paxos/" class=" active">分布式共识算法-Paxos</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var menu=document.querySelector("aside.book-menu nav");addEventListener("beforeunload",function(event){localStorage.setItem("menu.scrollTop",menu.scrollTop);});menu.scrollTop=localStorage.getItem("menu.scrollTop");})();</script>
+
+
+ 
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <strong>分布式共识算法-Paxos</strong>
+
+  <label for="toc-control">
+    
+    <img src="/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#paxos的角色">Paxos的角色</a></li>
+    <li><a href="#算法运行">算法运行</a></li>
+    <li><a href="#算法流程">算法流程</a></li>
+    <li><a href="#算法分析">算法分析</a></li>
+    <li><a href="#multipaxos">MultiPaxos</a></li>
+    <li><a href="#容错">容错</a></li>
+  </ul>
+</nav>
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown"><h1 id="分布式共识算法-paxos">
+  分布式共识算法-Paxos
+  <a class="anchor" href="#%e5%88%86%e5%b8%83%e5%bc%8f%e5%85%b1%e8%af%86%e7%ae%97%e6%b3%95-paxos">#</a>
+</h1>
+<p>Paxos是最著名的分布式共识算法之一。这里介绍一下这个算法。</p>
+<h2 id="paxos的角色">
+  Paxos的角色
+  <a class="anchor" href="#paxos%e7%9a%84%e8%a7%92%e8%89%b2">#</a>
+</h2>
+<ul>
+<li>Proposer，提议者 - 发起提议</li>
+<li>Acceptor，接受者，对于Proposer提议的Value作出决定。</li>
+<li>Learner，学习者，学习已经达成一直的Value。</li>
+</ul>
+<p>当我们使用Lamport Diagram来表现Paxos的时候，为了理解方便，我们需要将上面的三种角色分开来用不同的进程表示，但是实际运行中一个进程可以扮演多个角色。</p>
+<p>一个问题是Paxos的节点是需要提前知道有多少个Accpetor的，因为要达成一致，需要知道有大于等于一半的Acppetor同意。</p>
+<p>在介绍具体算法前，这里先澄清下，我们接下来先讨论的是对单个值达成共识，而对于一系列的值达成共识会在更后面进行介绍。</p>
+<h2 id="算法运行">
+  算法运行
+  <a class="anchor" href="#%e7%ae%97%e6%b3%95%e8%bf%90%e8%a1%8c">#</a>
+</h2>
+<p>假设某一时刻一个Proposer, P1，想要提议一个值，首先它需要做的是发送一条Prepare消息到至少众数的Accpetor那里。</p>
+<p><img src="https://files.huadonghu.com/20200615/O8oSlz.png?xa" alt="" /></p>
+<p>发送的Prepare消息的同时需要携带上唯一的提议号，Proposal Number。这个Proposal Number需要时全局唯一的，也就是说一旦一个Proposer使用过了这个提议号，那么其他的Proposal就不能再使用。所以如果有两个Proposer，一个简单的方式就是分别使用奇偶不同的Proposal Number。</p>
+<p>Proposal Number的另一个要求是必须是单调增的，也就说新的Proposal Number必须比已经使用过的Proposal Number来的大。</p>
+<p>当一个Acceptor接受到了一条Prepare消息后，它需要看一下这个proposal number：</p>
+<ul>
+<li>如果之前没有对这个proposal number作出过承诺，那么就回复给Proposer一条Promise消息。</li>
+<li>如果之前已经承诺过这个proposal number，那么直接丢弃这条Prepare消息。</li>
+</ul>
+<p><img src="https://files.huadonghu.com/20200615/G3SwUg.png" alt="" /></p>
+<p>上面的例子中Proposer P1给AcceptorA1, A2发送了Prepare 5的消息，这里其实也可以发送给A3，但是为了简化，只发送给了A1， A2，但是也达到了众数，所以是正确的，现实中也可能是消息丢失了最终只有A1和A2接收到了这条Prepare消息。</p>
+<p>A1和A2都没有对5作出过承诺，所以会回复Promise 5的消息。</p>
+<p>这里我们就已经达成了第一个里程碑： 众数个的Acceptor承诺了一个proposal number。如果此时还有其他Proposer发送prepare 4或者prepare 5，都不会被Acceptor承诺。</p>
+<p>Proposer P1此时接收到了众数个的Promise消息，于是它可以发送给accept消息给众数个的Acceptor。Accept消息包含proposal number和实际上需要进行提议的数值。</p>
+<p><img src="https://files.huadonghu.com/20200615/5k22EM.png" alt="" /></p>
+<p>P1提议的值是1所以accept消息包含proposal number 5和要提议的值1。而Acceptor在接收到accept消息，询问自己是否对这个proposal number作出个承诺，</p>
+<ul>
+<li>如果YES，则接受这条accept消息，回复一条accepted消息给Proposer和所有的Learners。</li>
+<li>如果NO，忽略这条accpet消息。</li>
+</ul>
+<p><img src="https://files.huadonghu.com/20200626/lFqKG1.png" alt="" /></p>
+<p>众数的Acceptor发送了accepted消息后的这个时刻，系统就达成共识。🎉。</p>
+<p>上面就是一个简单的Paxos算法运行的过程。</p>
+<p>达成共识的这个时刻，我们会发现其实系统中的每个节点并不是全部意识到了共识已经达成。最明显的就是A3，它什么都没收到！A1和A2发送了Accepted消息后，指导P1接收到了这两条消息才知道共识已经达成，而A1和A2此时还是浑然不知共识是否达成，因为他们不知道其他节点发送了什么消息。</p>
+<p>所以共识的达成和节点知道共识达成是两回事。</p>
+<p>P1只需要将消息发送给众数个节点的acceptor就能保证算法的正确性，但是如果P1能将消息发送给所有的acceptor的话会更好，因为存在消息丢失的可能性，所以消息发送给越多的acceptor，更容易使得众数个节点接收到消息。</p>
+<p>类似的，当P1从其acceptor接收到Promise消息时，它需要确保接收到了来自众数个节点的消息。当然，接收到全部的节点的消息更棒了！</p>
+<p>我们再来回顾下上面的算法，在系统达成一致的过程中，有哪些里程碑（milestones）的事件？用M表示。</p>
+<p><img src="https://files.huadonghu.com/20200626/OpyvWx.png" alt="" /></p>
+<p>不难发现，第一个里程碑的达成是当众数个acceptor对一个提议号作出承诺的时候。</p>
+<p>第二个里程碑是共识达成的时候，也就是当众数个acceptor发送了对一个提议号accepted消息的时候。尽管此时各个节点并不知道共识已经达成。</p>
+<p>第三个里程碑是当Proposer或者Leaner从众数个acceptor接收到accepted消息的时候，也是这个时候他们知道系统已经达成了共识。</p>
+<p>上面就是简单版的Paxos运行过程，下面我们把Paxos算法的步骤详细地描述一下。</p>
+<h2 id="算法流程">
+  算法流程
+  <a class="anchor" href="#%e7%ae%97%e6%b3%95%e6%b5%81%e7%a8%8b">#</a>
+</h2>
+<p>我们从上面的简单版本Paxos的运行过程，可以得出一个初步的算法流程：</p>
+<p>1，Proposer</p>
+<p>发送Prepare(n)消息给众数个acceptors，n必须满足</p>
+<ul>
+<li>唯一性</li>
+<li>大于其他任何已经尝试过的提议号（Proposal Number）</li>
+</ul>
+<p>2，Acceptor</p>
+<p>当Acceptor接收到一条Prepare(n)消息时，会根据是否对提议号n作出过承诺而作出不同的反应：</p>
+<ul>
+<li>如果已经承诺过了，丢弃这条消息</li>
+<li>如果没有承诺，则回复Proposer一条Promise(n)的承诺消息(*)，消息的含义是我会承诺丢弃掉所有小于n的消息。</li>
+</ul>
+<p>3， Proposer</p>
+<p>当Proposer接收到来自众数节点的对提议号n的Promise消息后，发送Accept(n, val)给Acceptor，n是提议号，val是具体的数值(*)。</p>
+<p>4，Acceptor</p>
+<p>当一个Acceptor接收到Accept(n, val)小时的时候，会询问自己是否承诺过丢弃n?</p>
+<ul>
+<li>如果Yes，则丢弃这条消息</li>
+<li>如果NO，则回复Accepted(n, val)消息给Proposer，同时将Accepted(n, val)发送给所有的Learner节点。</li>
+</ul>
+<p>OK，我们开始研究下如果有多个Proposer节点的话，上面的算法需要做怎么样的修改才能保证正确性。为了使流程图看起来不那么乱，下面的例子会省略去Learner节点。</p>
+<p><img src="https://files.huadonghu.com/20200626/QehUpH.png" alt="" /></p>
+<p>P1先发起了共识请求，我们再来看下，如果P2此时发送了prepare (4)消息给两个acceptor，会是什么结果</p>
+<p><img src="https://files.huadonghu.com/20200626/Q0CRW7.png" alt="" /></p>
+<p>此刻，A1和A2都已经承诺过丢弃提议号小于5的消息，P2此时发送给A1和A2的消息自然也就会被丢弃，A3还未作出过承诺，所以A3此时可以承诺会丢弃小于4的消息。</p>
+<p><img src="https://files.huadonghu.com/20200626/UEPbvh.png" alt="" /></p>
+<p>显然，此时的P2是不可能收到众数节点对提议号4的承诺的，那它应该怎么办呢？</p>
+<p>P2在等待超时后，可以重新发起Prepare(n)，那它该发送怎么样的n呢？显然P2可以发送一个比4更大的数，比如5，结果还是超时，再尝试6，可能可以得到众数个的Promise消息。当然，我们也可以预先设置好规则，P1使用奇数的提议号，P2使用偶数的提议号。</p>
+<p><img src="https://files.huadonghu.com/20200626/PPP9Se.png" alt="" /></p>
+<p>假设P2超时了，然后决定发送Prepare(6)给所有的acceptors，此时，3个proposer都没有承诺过丢弃6，按照之前的算法定义，应该是所有acceptor回复Promise(6)消息。</p>
+<blockquote>
+<p>2，Acceptor</p>
+<p>当Acceptor接收到一条Prepare(n)消息时，会根据是否对提议号n作出过承诺而作出不同的反应：</p>
+<ul>
+<li>如果已经承诺过了，丢弃这条消息</li>
+<li>如果没有承诺，则回复Proposer一条Promise(n)的承诺消息(*)，消息的含义是我会承诺丢弃掉所有小于n的消息。</li>
+</ul>
+</blockquote>
+<p>我们对上面*号的地方略作修改：</p>
+<blockquote>
+<p>2，Acceptor</p>
+<p>当Acceptor接收到一条Prepare(n)消息时，会根据是否对提议号n作出过承诺而作出不同的反应：</p>
+<ul>
+<li>如果已经承诺过了，丢弃这条消息</li>
+<li>如果没有承诺，则询问我之前作出过其他承诺了吗？
+<ul>
+<li>如果Yes，则回复Proposer一条Promise(n, (之前承诺的n, 之前接受的val))</li>
+<li>如果NO，则回复Proposer一条Promise(n)的承诺消息，消息的含义是我会承诺丢弃掉所有小于n的消息。</li>
+</ul>
+</li>
+</ul>
+</blockquote>
+<p><img src="https://files.huadonghu.com/20200626/Jo4QjM.png" alt="" /></p>
+<p>A1和A2因为都承诺过提议号5和接受过val1，所以他们会回复Promise(6,(5,1))，而A3因为还没有作出过任何承诺，回复Promise(6)。</p>
+<p>那P2在接收到上面的Promise消息后该怎么做呢？相较于Promise(6)这样的消息，Promise(6,(5,1))则包含了Acceptor之前承诺的最大提议号。</p>
+<p>我们再回顾下Proposer的此时的算法流程。</p>
+<blockquote>
+<p>3， Proposer</p>
+<p>当Proposer接收到来自众数节点的对提议号n的Promise消息后，发送Accept(n, val)给Acceptor，n是提议号，val是具体的数值(*)。</p>
+</blockquote>
+<p>这里P2不能随意地发送 Accept消息了，而是需要从promise消息里面取出具有最大的提议号的接受的val，将其发送给Acceptor。</p>
+<p>所以此处算法修改为：</p>
+<blockquote>
+<p>3， Proposer</p>
+<p>当Proposer接收到来自众数节点的对提议号n的Promise消息后，发送Accept(n, val)给Acceptor，n是提议号，val是:</p>
+<ul>
+<li>如果Proposer接收到任何的Promise(n, (prevN, prevVal))，它必须从中选出具有最大preV的prevVal。</li>
+<li>否则，Proposer可以设置任意的val。</li>
+</ul>
+</blockquote>
+<p>上面的例子中，因为两条Promise消息的最大之前提议号都是5，所以P2只能发送Accept(6，1)。</p>
+<p><img src="https://files.huadonghu.com/20200627/Pnw1lh.png" alt="" /></p>
+<p>A2 A3之前并没有承诺丢弃提议号6，所以会回复Accepted消息。</p>
+<p><img src="https://files.huadonghu.com/20200627/3WpEon.png" alt="" /></p>
+<p>以下是完整的算法流程：</p>
+<p>1，Proposer</p>
+<p>发送Prepare(n)消息给众数个acceptors，n必须满足</p>
+<ul>
+<li>唯一性</li>
+<li>大于其他任何已经尝试过的提议号（Proposal Number）</li>
+</ul>
+<p>2，Acceptor</p>
+<p>当Acceptor接收到一条Prepare(n)消息时，会根据是否对提议号n作出过承诺而作出不同的反应：</p>
+<ul>
+<li>如果已经承诺过了，丢弃这条消息</li>
+<li>如果没有承诺，则询问我之前作出过其他承诺了吗？
+<ul>
+<li>如果Yes，则回复Proposer一条Promise(n, (之前承诺的n, 之前接受的val))</li>
+<li>如果NO，则回复Proposer一条Promise(n)的承诺消息，消息的含义是我会承诺丢弃掉所有小于n的消息。</li>
+</ul>
+</li>
+</ul>
+<p>3，Proposer</p>
+<p>当Proposer接收到来自众数节点的对提议号n的Promise消息后，发送Accept(n, val)给Acceptor，n是提议号，val是:</p>
+<ul>
+<li>如果Proposer接收到任何的Promise(n, (prevN, prevVal))，它必须从中选出具有最大preV的prevVal。</li>
+<li>否则，Proposer可以设置任意的val。</li>
+</ul>
+<p>4，Acceptor</p>
+<p>当一个Acceptor接收到Accept(n, val)小时的时候，会询问自己是否承诺过丢弃n?</p>
+<ul>
+<li>如果Yes，则丢弃这条消息</li>
+<li>如果NO，则回复Accepted(n, val)消息给Proposer，同时将Accepted(n, val)发送给所有的Learner节点。</li>
+</ul>
+<h2 id="算法分析">
+  算法分析
+  <a class="anchor" href="#%e7%ae%97%e6%b3%95%e5%88%86%e6%9e%90">#</a>
+</h2>
+<p>上一篇提到过共识算法的三个特性：</p>
+<ol>
+<li>终止(Termination): 所有的正确的进程最终会决定好一个值。</li>
+<li>共识 (Agreement): 所有的正确的进程最终会在一个相同的值上面达成共识。</li>
+<li>有效性(Validity): 达成共识的值必须是之前提议过的。</li>
+</ol>
+<p>三个特性是无法同时满足的，那么Paxos在哪一点上做了妥协呢？答案是终止性。有一种可能就是两个或多个Proposer在互相竞争，导致没有一个Proposer可以获得众数个Acceptor的承诺。</p>
+<p>你可能会问了，既然多个Proposer互相竞争导致算法不能终止，那为什么我们只允许一个Proposer呢？</p>
+<p>一个原因是容错，单点模型不利于容错，这个很容易理解。另一个重要的原因是，如果一个Proposer终止运行了， 那么就要重新选举出一个Proposer，而选举算法用的又是Paxos，ummm。所以我们不能只允许一个Proposer存在因为这样的共识算法会变成依赖于共识算法。</p>
+<p>其实也有其他共识算法会将Leader选举作为算法的一个阶段，比如Raft，这个后面会做介绍。</p>
+<h2 id="multipaxos">
+  MultiPaxos
+  <a class="anchor" href="#multipaxos">#</a>
+</h2>
+<p>我们之前都在谈论如何在单个值上面达成共识，但实际应用中，更多的是对多个值，或者说是一连串的值达成共识。</p>
+<p>比如之前提到的全序广播(Totally Ordered BroadCast)，其中的一个问题是如何保证每个进程会按照一样的顺序进行消息交付，这就是对一系列值达成共识的例子。</p>
+<p>可能有同学会想，可不可以多次执行单值的Paxos算法去实现多值的共识呢？我们发现Paxos达成共识需要发送大量的网络消息，如果多次运行Paxos必然会导致效率的低下。</p>
+<p>我们再回顾下达成共识的里程碑。</p>
+<p><img src="https://files.huadonghu.com/20200626/OpyvWx.png" alt="" /></p>
+<p>实际上在M1阶段后，有众数个Acceptors做出了承诺，我们完全可以一直进行accept()和accepted()操作，直到单个的Proposer崩溃了。</p>
+<p><img src="https://files.huadonghu.com/20200627/4aMPRy.png" alt="" /></p>
+<p>上面的就是MultiPaxos，上面的操作是安全的如果P1一直没有崩溃的话。但是如果其他的Proposer出现了呢？其实不影响，如果新出现的Proposer P2发送了Prepare(6)，那么P1的后续消息也就被丢弃了，此时又降级到了普通的Paxos，但其实这样的情况很少发生。</p>
+<h2 id="容错">
+  容错
+  <a class="anchor" href="#%e5%ae%b9%e9%94%99">#</a>
+</h2>
+<p>最多多少的acceptors崩溃后系统能够继续正常运行？</p>
+<p>如果f是你希望容忍的acceptors失败，那么就需要2f+1个acceptors.</p>
+<p>最多多少的Proposers崩溃后系统能够继续正常运行？</p>
+<p>f+1，系统是至少需要有一个Proposer。</p>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+
+
+
+</div>
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "distributed-system" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#paxos的角色">Paxos的角色</a></li>
+    <li><a href="#算法运行">算法运行</a></li>
+    <li><a href="#算法流程">算法流程</a></li>
+    <li><a href="#算法分析">算法分析</a></li>
+    <li><a href="#multipaxos">MultiPaxos</a></li>
+    <li><a href="#容错">容错</a></li>
+  </ul>
+</nav>
+
+ 
+    </aside>
+    
+  </main>
+
+  
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

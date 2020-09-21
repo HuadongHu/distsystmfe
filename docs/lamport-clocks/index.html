@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en" dir=>
+
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="3. Lamport时钟(Lamport clocks) #  我们之前谈到，我们需要一种仅仅用来标注时间的发生顺序的逻辑时钟，这种时钟不会告诉我们现在是几点钟了，也不会告诉我们过去了多长时间。 Lambert clock。
+Lambert clock其实是一种给事件分配数字的方式，使得如果事件A早于事件B发生，那么A的 Lambert clock，简称LC，小于事件B的LC。LC(A) &lt; LC(B)。
+所以我们说 Lambert clock是和因果关系保持一致的，如果事件A早于事件B，则LC(A) &lt; LC(B)。
+下面是算法的具体过程
+ 首先，每个进程都初始化计数器(Counter)为0。 每个进程内，事件发生则将计数器&#43;1。 如果发生消息发送事件，则将其计数器携带上。 如果是消息接收事件，则max(本地计数器&#43;1, 网络携带的计数器)。  其实很简单的过程，你可以试着计算下下面的例子
+答案
+那思考一个问题，如果LC(A) &lt; LC(B)，那么可以推断出事件A happens before B么？
+答案是否定的。
+我们来看另一个例子。你可以再试着计算下下面的例子中事件A和事件B的LC分别是多少。
+OK，相信你已经计算好了。
+我们发现，LC(A) = 1, LC(B) = 5，LC(A) &lt; LC(B)，那A事件 happens before B事件么？NO。
+根据之前讲过的Happens-before的定义：
+ A和B在同一个进程线里面而且B在A后面发生。 A是消息发送事件， B是与之对应的接收事件。 如果A-&gt;C, 且C-&gt;B。  显然，这里的A事件和B事件之间不符合上面三条定义中的任意一个。也就是说，A和B之间是无关联的。所以如果知道LC(A) &lt; LC(B)并不能推断出A happens before B。
+我们可以发现，如果两个事件之间存在一个确定的Happens-before关系，在图中是可以画一条线连接两个事件的。如果不存在在一个确定的Happens-before关系，则不能画出这样的一条线。
+当然，上图中我没有单独将各自进程内的事件连线。
+上面的例子摘自论文Detecting Causal Relationships in Distributed Computations: In Search of the Holy Grail，这篇论文发表在1994年，作者Mattern也发明了另一个逻辑时钟，一个能描述因果关系的时钟，Vector Clock，这个会在后面介绍。">
+<meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="3. Lamport时钟(Lamport clocks)" />
+<meta property="og:description" content="3. Lamport时钟(Lamport clocks) #  我们之前谈到，我们需要一种仅仅用来标注时间的发生顺序的逻辑时钟，这种时钟不会告诉我们现在是几点钟了，也不会告诉我们过去了多长时间。 Lambert clock。
+Lambert clock其实是一种给事件分配数字的方式，使得如果事件A早于事件B发生，那么A的 Lambert clock，简称LC，小于事件B的LC。LC(A) &lt; LC(B)。
+所以我们说 Lambert clock是和因果关系保持一致的，如果事件A早于事件B，则LC(A) &lt; LC(B)。
+下面是算法的具体过程
+ 首先，每个进程都初始化计数器(Counter)为0。 每个进程内，事件发生则将计数器&#43;1。 如果发生消息发送事件，则将其计数器携带上。 如果是消息接收事件，则max(本地计数器&#43;1, 网络携带的计数器)。  其实很简单的过程，你可以试着计算下下面的例子
+答案
+那思考一个问题，如果LC(A) &lt; LC(B)，那么可以推断出事件A happens before B么？
+答案是否定的。
+我们来看另一个例子。你可以再试着计算下下面的例子中事件A和事件B的LC分别是多少。
+OK，相信你已经计算好了。
+我们发现，LC(A) = 1, LC(B) = 5，LC(A) &lt; LC(B)，那A事件 happens before B事件么？NO。
+根据之前讲过的Happens-before的定义：
+ A和B在同一个进程线里面而且B在A后面发生。 A是消息发送事件， B是与之对应的接收事件。 如果A-&gt;C, 且C-&gt;B。  显然，这里的A事件和B事件之间不符合上面三条定义中的任意一个。也就是说，A和B之间是无关联的。所以如果知道LC(A) &lt; LC(B)并不能推断出A happens before B。
+我们可以发现，如果两个事件之间存在一个确定的Happens-before关系，在图中是可以画一条线连接两个事件的。如果不存在在一个确定的Happens-before关系，则不能画出这样的一条线。
+当然，上图中我没有单独将各自进程内的事件连线。
+上面的例子摘自论文Detecting Causal Relationships in Distributed Computations: In Search of the Holy Grail，这篇论文发表在1994年，作者Mattern也发明了另一个逻辑时钟，一个能描述因果关系的时钟，Vector Clock，这个会在后面介绍。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://distsystms.huadonghu.com/docs/lamport-clocks/" />
+<meta property="article:published_time" content="2020-09-03T23:58:20-07:00" />
+<meta property="article:modified_time" content="2020-09-03T23:58:20-07:00" />
+<title>3. Lamport时钟(Lamport clocks) | 分布式系统概述</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/favicon.png" type="image/x-icon">
+<link rel="stylesheet" href="/book.min.891c5b58a7a694942d519238f3c4138504c9ad2e207c0fd6541f9cd4f8d6220a.css" integrity="sha256-iRxbWKemlJQtUZI488QThQTJrS4gfA/WVB&#43;c1PjWIgo=">
+<script defer src="/en.search.min.a11bce14b45c5aff67fd7c1055386de7bc7645033a9f7998b8d0fab98cc3a8e7.js" integrity="sha256-oRvOFLRcWv9n/XwQVTht57x2RQM6n3mYuND6uYzDqOc="></script>
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-131378726-6', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+  
+</head>
+
+<body dir=>
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      
+  <nav>
+<h2 class="book-brand">
+  <a href="/"><span>分布式系统概述</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/case-study-amazons-dynamodb/" class="">14. Case study: Amazon&#39;s DynamoDB</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/eventual-consistency/" class="">13. 最终一致性(eventual consistency)，CAP理论</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/replications-and-consistency/" class="">11. 冗余备份(Replications)与一致性(Consistency)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/implementation-of-reliable-delivery/" class="">10. 实现可靠消息交付</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/reliable-delivery/" class="">9. 可靠消息交付</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/safety-liveness/" class="">8. Safety 和 Liveness</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/chandylamport-snapshot-algorithm/" class="">7. Chandy-Lamport快照(Snapshot)算法</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/consensus/" class="">12. 分布式共识算法</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/message-delivery/" class="">6. 消息交付(Message Delivery)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/raft/" class="">分布式共识算法-Raft</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/protocol-lamport-diagram/" class="">5. 网络协议(Protocol)与Lamport diagram</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/vector-clock/" class="">4. 向量时钟(Vector Clock)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/lamport-clocks/" class=" active">3. Lamport时钟(Lamport clocks)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/lamport-diagrams-happensbefore-partial-order/" class="">2. Lamport Diagrams，Happens-before，同步网络与异步网络，偏序关系</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/distributed-systems-what-and-why-time-and-clocks/" class="">1. 什么是和为什么分布式系统？时间和时钟。</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/paxos/" class="">分布式共识算法-Paxos</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var menu=document.querySelector("aside.book-menu nav");addEventListener("beforeunload",function(event){localStorage.setItem("menu.scrollTop",menu.scrollTop);});menu.scrollTop=localStorage.getItem("menu.scrollTop");})();</script>
+
+
+ 
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <strong>3. Lamport时钟(Lamport clocks)</strong>
+
+  <label for="toc-control">
+    
+    <img src="/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  <nav id="TableOfContents"></nav>
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown"><h1 id="3-lamport时钟lamport-clocks">
+  3. Lamport时钟(Lamport clocks)
+  <a class="anchor" href="#3-lamport%e6%97%b6%e9%92%9flamport-clocks">#</a>
+</h1>
+<p>我们之前谈到，我们需要一种仅仅用来标注时间的发生顺序的逻辑时钟，这种时钟不会告诉我们现在是几点钟了，也不会告诉我们过去了多长时间。 Lambert clock。</p>
+<p>Lambert clock其实是一种给事件分配数字的方式，使得如果事件A早于事件B发生，那么A的 Lambert clock，简称LC，小于事件B的LC。LC(A) &lt; LC(B)。</p>
+<p>所以我们说 Lambert clock是和因果关系保持一致的，如果事件A早于事件B，则LC(A) &lt; LC(B)。</p>
+<p>下面是算法的具体过程</p>
+<ol>
+<li>首先，每个进程都初始化计数器(Counter)为0。</li>
+<li>每个进程内，事件发生则将计数器+1。</li>
+<li>如果发生消息发送事件，则将其计数器携带上。</li>
+<li>如果是消息接收事件，则max(本地计数器+1, 网络携带的计数器)。</li>
+</ol>
+<p>其实很简单的过程，你可以试着计算下下面的例子</p>
+<p><img src="https://files.huadonghu.com/20200522/2gMNG1.png" alt="" /></p>
+<p>答案</p>
+<p><img src="https://files.huadonghu.com/20200522/5Ki7eT.png" alt="" /></p>
+<p>那思考一个问题，如果LC(A) &lt; LC(B)，那么可以推断出事件A happens before B么？</p>
+<p>答案是否定的。</p>
+<p>我们来看另一个例子。你可以再试着计算下下面的例子中事件A和事件B的LC分别是多少。</p>
+<p><img src="https://files.huadonghu.com/20200522/ylyLwA.png" alt="" /></p>
+<p>OK，相信你已经计算好了。</p>
+<p><img src="https://files.huadonghu.com/20200522/BXZPGy.png" alt="" /></p>
+<p>我们发现，LC(A) = 1, LC(B) = 5，LC(A) &lt; LC(B)，那A事件 happens before B事件么？NO。</p>
+<p>根据之前讲过的Happens-before的定义：</p>
+<ol>
+<li>A和B在同一个进程线里面而且B在A后面发生。</li>
+<li>A是消息发送事件， B是与之对应的接收事件。</li>
+<li>如果A-&gt;C, 且C-&gt;B。</li>
+</ol>
+<p>显然，这里的A事件和B事件之间不符合上面三条定义中的任意一个。也就是说，A和B之间是无关联的。所以如果知道<strong>LC(A) &lt; LC(B)并不能推断出A happens before B</strong>。</p>
+<p>我们可以发现，如果两个事件之间存在一个确定的Happens-before关系，在图中是可以画一条线连接两个事件的。如果不存在在一个确定的Happens-before关系，则不能画出这样的一条线。</p>
+<p><img src="https://files.huadonghu.com/20200522/VKe1K4.png" alt="" /></p>
+<p>当然，上图中我没有单独将各自进程内的事件连线。</p>
+<p>上面的例子摘自论文<a href="https://www.vs.inf.ethz.ch/publ/papers/holygrail.pdf">Detecting Causal Relationships in Distributed Computations: In Search of the Holy Grail</a>，这篇论文发表在1994年，作者Mattern也发明了另一个逻辑时钟，一个能描述因果关系的时钟，Vector Clock，这个会在后面介绍。</p>
+<p>说回来Lamport Clock， 既然它并不能描述因果关系(Causality)，那我们为什么还要用它呢？</p>
+<p>先说过数学问题，如果P能推出Q, P=&gt;Q，那么逆否命题～Q=&gt;～P成立。</p>
+<p>如果A happens before B, 也就是 A -&gt; B，则 LC(A) &lt; LC(B)。 那么如果LC(A) &gt; LC(B)，那么A -&gt; B肯定为假，也即是A肯定不会happens before B。</p>
+<p>逻辑很简单，那么有什么用呢？Debug。</p>
+<p>下一节我们讨论vector clocks。</p>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+
+
+
+</div>
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "distributed-system" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      
+  <nav id="TableOfContents"></nav>
+
+ 
+    </aside>
+    
+  </main>
+
+  
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

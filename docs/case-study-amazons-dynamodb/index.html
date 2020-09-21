@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en" dir=>
+
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="14. Case study: Amazon&rsquo;s DynamoDB #  论文下载 #  https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf
+可用性(Availability) #  我们之前对可用的定义是所有的请求都会收到回复。这里做一些修改，变为所有的请求在一定的时间内都会收到有意义的回复。
+如果用户想更新自己的购物车，即使存在网络分区，也尽管让他们继续更新而不是等待备份节点的确认。这样的方式会导致一些数据的丢失和不一致，但是是可以保证高可用。
+最终一致性(Eventual Consistency) #  Dynamo论文中并没有阐明是否达成了强收敛，以及也并没有提到强最终一致(String eventual consistency)，可能是因为Dynamo发表的年份早于这个术语的诞生。
+向量时钟(Vector Clocks) #  论文中有提及向量时钟的用途：用来追踪对象(object)的历史。对于每一个事件都会分配一个逻辑的时间戳，当冲突产生的时候Dynamo会使用向量时钟去处理冲突。但是向量时钟不一定每次都能奏效，原因我们也多次讨论过，向量时钟不能处理当事件是独立或者并发的情形。此时要不使用物理时钟(physical timestamps)或者将冲突留给客户端处理。客户端的开发者对冲突的解决的策略可能会更加了解些。
+Dynamo允许你提供自己的冲突处理机制，如果不提供的话，则采用最后一次写(last write wins)。
+我们使用Lamport diagrams可以从全局的角度看一个系统，但是在真实额系统中并不能画出这样的图去发现备份间的冲突。Dinamo有一些机制去检测和解决这样的冲突，其中一个叫做逆墒(Anti-entropy)。
+逆墒(Anti-entropy) #  逆墒是一种用来保证备份间一致的协议。其工作方法为： 一个节点每固定的时间随机地联系其他的节点并询问其状态。
+论文中还提到了gossip，一种用于节点间对具体Key-Value对的查询的通信方式。Dynamo使用gossip去查询其他节点的路由表以知道系统中活跃节点。系统中除了具体的数据，活跃的节点信息也很重要，gossip在dynamo中就是用来做节点是否失联的追踪的。
+Anti-entropy是用来处理具体数据的冲突的，而gossip则是用来使系统内活跃节点信息一致。
+这里有个问题是上述的两种情形有什么差别？尽管概念上讲两者很像，但是数据的差别可能会很大，而内活跃节点信息会很小。如果询问两个节点间的数据差别，则有可能要发送大量的数据包。
+所以，Dynamo中为了对比两个节点中的数据差别，不会发送整个状态，而是使用了一种哈希树来减小数据传送的代价。
+Merkel trees #  {% embed url=&ldquo;https://brilliant.org/wiki/merkle-tree/&quot; %}
+我们需要解决的问题是不想把一个节点的状态完整的发送给另一个节点。但是如果两个节点不一致的话，该如何找出不一致的数据呢？
+如果两个节点的状态的root hash值不一样，则递归地到左右两棵子树中查找，知道找到了叶子节点具体的数据块中不一样的地方。
+Quorum Consistency #  在经典的主备模型中，客户端会只会和特定的节点进行通信。但是在Dynamo中，客户端可以和任意的一个节点通信，每个节点的角色是一样的。此时的客户端有点像是在充当主节点，它需要和这些备份节点直接通信，但是这些节点中有多少是客户端可以直接通信的呢？这个在Dynamo中是可以配置的。
+ N表示备份节点数量（比如3个） W表示备份节点中需要对写请求响应ACK的数量。（Write quorum) R表示备份节点中需要对读请求响应ACK的数量。（Read quorum)  W和R最多是N个，最少呢？让我们尝试下不同的组合，比如W是3，R是1，这样的组合可以保证强一致么？显然，每次写请求需要3个节点确认，那么必然是能保证强一致的，但是缺点是不能容错（fault tolerant），只要有一个节点故障了，或者出现了网络分区，那么就不能得到3条写确认。这种方式叫做WARO(Write All Read one)，尽管读操作可用性可以提高，但是写操作的可用性却降低了。">
+<meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="14. Case study: Amazon&#39;s DynamoDB" />
+<meta property="og:description" content="14. Case study: Amazon&rsquo;s DynamoDB #  论文下载 #  https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf
+可用性(Availability) #  我们之前对可用的定义是所有的请求都会收到回复。这里做一些修改，变为所有的请求在一定的时间内都会收到有意义的回复。
+如果用户想更新自己的购物车，即使存在网络分区，也尽管让他们继续更新而不是等待备份节点的确认。这样的方式会导致一些数据的丢失和不一致，但是是可以保证高可用。
+最终一致性(Eventual Consistency) #  Dynamo论文中并没有阐明是否达成了强收敛，以及也并没有提到强最终一致(String eventual consistency)，可能是因为Dynamo发表的年份早于这个术语的诞生。
+向量时钟(Vector Clocks) #  论文中有提及向量时钟的用途：用来追踪对象(object)的历史。对于每一个事件都会分配一个逻辑的时间戳，当冲突产生的时候Dynamo会使用向量时钟去处理冲突。但是向量时钟不一定每次都能奏效，原因我们也多次讨论过，向量时钟不能处理当事件是独立或者并发的情形。此时要不使用物理时钟(physical timestamps)或者将冲突留给客户端处理。客户端的开发者对冲突的解决的策略可能会更加了解些。
+Dynamo允许你提供自己的冲突处理机制，如果不提供的话，则采用最后一次写(last write wins)。
+我们使用Lamport diagrams可以从全局的角度看一个系统，但是在真实额系统中并不能画出这样的图去发现备份间的冲突。Dinamo有一些机制去检测和解决这样的冲突，其中一个叫做逆墒(Anti-entropy)。
+逆墒(Anti-entropy) #  逆墒是一种用来保证备份间一致的协议。其工作方法为： 一个节点每固定的时间随机地联系其他的节点并询问其状态。
+论文中还提到了gossip，一种用于节点间对具体Key-Value对的查询的通信方式。Dynamo使用gossip去查询其他节点的路由表以知道系统中活跃节点。系统中除了具体的数据，活跃的节点信息也很重要，gossip在dynamo中就是用来做节点是否失联的追踪的。
+Anti-entropy是用来处理具体数据的冲突的，而gossip则是用来使系统内活跃节点信息一致。
+这里有个问题是上述的两种情形有什么差别？尽管概念上讲两者很像，但是数据的差别可能会很大，而内活跃节点信息会很小。如果询问两个节点间的数据差别，则有可能要发送大量的数据包。
+所以，Dynamo中为了对比两个节点中的数据差别，不会发送整个状态，而是使用了一种哈希树来减小数据传送的代价。
+Merkel trees #  {% embed url=&ldquo;https://brilliant.org/wiki/merkle-tree/&quot; %}
+我们需要解决的问题是不想把一个节点的状态完整的发送给另一个节点。但是如果两个节点不一致的话，该如何找出不一致的数据呢？
+如果两个节点的状态的root hash值不一样，则递归地到左右两棵子树中查找，知道找到了叶子节点具体的数据块中不一样的地方。
+Quorum Consistency #  在经典的主备模型中，客户端会只会和特定的节点进行通信。但是在Dynamo中，客户端可以和任意的一个节点通信，每个节点的角色是一样的。此时的客户端有点像是在充当主节点，它需要和这些备份节点直接通信，但是这些节点中有多少是客户端可以直接通信的呢？这个在Dynamo中是可以配置的。
+ N表示备份节点数量（比如3个） W表示备份节点中需要对写请求响应ACK的数量。（Write quorum) R表示备份节点中需要对读请求响应ACK的数量。（Read quorum)  W和R最多是N个，最少呢？让我们尝试下不同的组合，比如W是3，R是1，这样的组合可以保证强一致么？显然，每次写请求需要3个节点确认，那么必然是能保证强一致的，但是缺点是不能容错（fault tolerant），只要有一个节点故障了，或者出现了网络分区，那么就不能得到3条写确认。这种方式叫做WARO(Write All Read one)，尽管读操作可用性可以提高，但是写操作的可用性却降低了。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://distsystms.huadonghu.com/docs/case-study-amazons-dynamodb/" />
+<meta property="article:published_time" content="2020-09-14T23:58:20-07:00" />
+<meta property="article:modified_time" content="2020-09-14T23:58:20-07:00" />
+<title>14. Case study: Amazon&#39;s DynamoDB | 分布式系统概述</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/favicon.png" type="image/x-icon">
+<link rel="stylesheet" href="/book.min.891c5b58a7a694942d519238f3c4138504c9ad2e207c0fd6541f9cd4f8d6220a.css" integrity="sha256-iRxbWKemlJQtUZI488QThQTJrS4gfA/WVB&#43;c1PjWIgo=">
+<script defer src="/en.search.min.a11bce14b45c5aff67fd7c1055386de7bc7645033a9f7998b8d0fab98cc3a8e7.js" integrity="sha256-oRvOFLRcWv9n/XwQVTht57x2RQM6n3mYuND6uYzDqOc="></script>
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-131378726-6', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+  
+</head>
+
+<body dir=>
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      
+  <nav>
+<h2 class="book-brand">
+  <a href="/"><span>分布式系统概述</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/case-study-amazons-dynamodb/" class=" active">14. Case study: Amazon&#39;s DynamoDB</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/eventual-consistency/" class="">13. 最终一致性(eventual consistency)，CAP理论</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/replications-and-consistency/" class="">11. 冗余备份(Replications)与一致性(Consistency)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/implementation-of-reliable-delivery/" class="">10. 实现可靠消息交付</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/reliable-delivery/" class="">9. 可靠消息交付</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/safety-liveness/" class="">8. Safety 和 Liveness</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/chandylamport-snapshot-algorithm/" class="">7. Chandy-Lamport快照(Snapshot)算法</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/consensus/" class="">12. 分布式共识算法</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/message-delivery/" class="">6. 消息交付(Message Delivery)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/raft/" class="">分布式共识算法-Raft</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/protocol-lamport-diagram/" class="">5. 网络协议(Protocol)与Lamport diagram</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/vector-clock/" class="">4. 向量时钟(Vector Clock)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/lamport-clocks/" class="">3. Lamport时钟(Lamport clocks)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/lamport-diagrams-happensbefore-partial-order/" class="">2. Lamport Diagrams，Happens-before，同步网络与异步网络，偏序关系</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/distributed-systems-what-and-why-time-and-clocks/" class="">1. 什么是和为什么分布式系统？时间和时钟。</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/paxos/" class="">分布式共识算法-Paxos</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var menu=document.querySelector("aside.book-menu nav");addEventListener("beforeunload",function(event){localStorage.setItem("menu.scrollTop",menu.scrollTop);});menu.scrollTop=localStorage.getItem("menu.scrollTop");})();</script>
+
+
+ 
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <strong>14. Case study: Amazon&#39;s DynamoDB</strong>
+
+  <label for="toc-control">
+    
+    <img src="/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  <nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#论文下载">论文下载</a></li>
+        <li><a href="#可用性availability">可用性(Availability)</a></li>
+        <li><a href="#最终一致性eventual-consistency">最终一致性(Eventual Consistency)</a></li>
+        <li><a href="#向量时钟vector-clocks">向量时钟(Vector Clocks)</a></li>
+        <li><a href="#逆墒anti-entropy">逆墒(Anti-entropy)</a></li>
+        <li><a href="#merkel-trees">Merkel trees</a></li>
+        <li><a href="#quorum-consistency">Quorum Consistency</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown"><h1 id="14-case-study-amazons-dynamodb">
+  14. Case study: Amazon&rsquo;s DynamoDB
+  <a class="anchor" href="#14-case-study-amazons-dynamodb">#</a>
+</h1>
+<h3 id="论文下载">
+  论文下载
+  <a class="anchor" href="#%e8%ae%ba%e6%96%87%e4%b8%8b%e8%bd%bd">#</a>
+</h3>
+<p><a href="https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf">https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf</a></p>
+<h3 id="可用性availability">
+  可用性(Availability)
+  <a class="anchor" href="#%e5%8f%af%e7%94%a8%e6%80%a7availability">#</a>
+</h3>
+<p>我们之前对可用的定义是所有的请求都会收到回复。这里做一些修改，变为所有的请求在<strong>一定的时间</strong>内都会收到<strong>有意义的回复</strong>。</p>
+<p>如果用户想更新自己的购物车，即使存在网络分区，也尽管让他们继续更新而不是等待备份节点的确认。这样的方式会导致一些数据的丢失和不一致，但是是可以保证高可用。</p>
+<h3 id="最终一致性eventual-consistency">
+  最终一致性(Eventual Consistency)
+  <a class="anchor" href="#%e6%9c%80%e7%bb%88%e4%b8%80%e8%87%b4%e6%80%a7eventual-consistency">#</a>
+</h3>
+<p>Dynamo论文中并没有阐明是否达成了强收敛，以及也并没有提到强最终一致(String eventual consistency)，可能是因为Dynamo发表的年份早于这个术语的诞生。</p>
+<h3 id="向量时钟vector-clocks">
+  向量时钟(Vector Clocks)
+  <a class="anchor" href="#%e5%90%91%e9%87%8f%e6%97%b6%e9%92%9fvector-clocks">#</a>
+</h3>
+<p>论文中有提及向量时钟的用途：用来追踪对象(object)的历史。对于每一个事件都会分配一个逻辑的时间戳，当冲突产生的时候Dynamo会使用向量时钟去处理冲突。但是向量时钟不一定每次都能奏效，原因我们也多次讨论过，向量时钟不能处理当事件是独立或者并发的情形。此时要不使用物理时钟(physical timestamps)或者将冲突留给客户端处理。客户端的开发者对冲突的解决的策略可能会更加了解些。</p>
+<p>Dynamo允许你提供自己的冲突处理机制，如果不提供的话，则采用最后一次写(last write wins)。</p>
+<p>我们使用Lamport diagrams可以从全局的角度看一个系统，但是在真实额系统中并不能画出这样的图去发现备份间的冲突。Dinamo有一些机制去检测和解决这样的冲突，其中一个叫做逆墒(Anti-entropy)。</p>
+<h3 id="逆墒anti-entropy">
+  逆墒(Anti-entropy)
+  <a class="anchor" href="#%e9%80%86%e5%a2%92anti-entropy">#</a>
+</h3>
+<p>逆墒是一种用来保证备份间一致的协议。其工作方法为： 一个节点每固定的时间随机地联系其他的节点并询问其状态。</p>
+<p>论文中还提到了gossip，一种用于节点间对具体Key-Value对的查询的通信方式。Dynamo使用gossip去查询其他节点的路由表以知道系统中活跃节点。系统中除了具体的数据，活跃的节点信息也很重要，gossip在dynamo中就是用来做节点是否失联的追踪的。</p>
+<p>Anti-entropy是用来处理具体数据的冲突的，而gossip则是用来使系统内活跃节点信息一致。</p>
+<p>这里有个问题是上述的两种情形有什么差别？尽管概念上讲两者很像，但是数据的差别可能会很大，而内活跃节点信息会很小。如果询问两个节点间的数据差别，则有可能要发送大量的数据包。</p>
+<p>所以，Dynamo中为了对比两个节点中的数据差别，不会发送整个状态，而是使用了一种哈希树来减小数据传送的代价。</p>
+<h3 id="merkel-trees">
+  Merkel trees
+  <a class="anchor" href="#merkel-trees">#</a>
+</h3>
+<p><img src="https://files.huadonghu.com//20200920/0UoKFO.png" alt="" /></p>
+<p>{% embed url=&ldquo;<a href="https://brilliant.org/wiki/merkle-tree/%22">https://brilliant.org/wiki/merkle-tree/&quot;</a> %}</p>
+<p>我们需要解决的问题是不想把一个节点的状态完整的发送给另一个节点。但是如果两个节点不一致的话，该如何找出不一致的数据呢？</p>
+<p><img src="https://files.huadonghu.com//20200920/yuVmtr.png" alt="" /></p>
+<p>如果两个节点的状态的root hash值不一样，则递归地到左右两棵子树中查找，知道找到了叶子节点具体的数据块中不一样的地方。</p>
+<h3 id="quorum-consistency">
+  Quorum Consistency
+  <a class="anchor" href="#quorum-consistency">#</a>
+</h3>
+<p>在经典的主备模型中，客户端会只会和特定的节点进行通信。但是在Dynamo中，客户端可以和任意的一个节点通信，每个节点的角色是一样的。此时的客户端有点像是在充当主节点，它需要和这些备份节点直接通信，但是这些节点中有多少是客户端可以直接通信的呢？这个在Dynamo中是可以配置的。</p>
+<ul>
+<li>N表示备份节点数量（比如3个）</li>
+<li>W表示备份节点中需要对写请求响应ACK的数量。（Write quorum)</li>
+<li>R表示备份节点中需要对读请求响应ACK的数量。（Read quorum)</li>
+</ul>
+<p>W和R最多是N个，最少呢？让我们尝试下不同的组合，比如W是3，R是1，这样的组合可以保证强一致么？显然，每次写请求需要3个节点确认，那么必然是能保证强一致的，但是缺点是不能容错（fault tolerant），只要有一个节点故障了，或者出现了网络分区，那么就不能得到3条写确认。这种方式叫做WARO(Write All Read one)，尽管读操作可用性可以提高，但是写操作的可用性却降低了。</p>
+<p>Dynamo 论文中的建议是设置R = 2，W= 2。</p>
+<p><img src="https://files.huadonghu.com//20200920/YMr9Lk.png" alt="" /></p>
+<p>上面的例子中一个备份认为X等于4，一个备份认为X等于5，此时我们就知道不一致的情况发生了从而需要我们采取一些措施。比如重新请求，此时三个备份的数据已经一致。</p>
+<p>一般来说，我们需要保证R + W &gt; N。</p>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+
+
+
+</div>
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "distributed-system" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      
+  <nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#论文下载">论文下载</a></li>
+        <li><a href="#可用性availability">可用性(Availability)</a></li>
+        <li><a href="#最终一致性eventual-consistency">最终一致性(Eventual Consistency)</a></li>
+        <li><a href="#向量时钟vector-clocks">向量时钟(Vector Clocks)</a></li>
+        <li><a href="#逆墒anti-entropy">逆墒(Anti-entropy)</a></li>
+        <li><a href="#merkel-trees">Merkel trees</a></li>
+        <li><a href="#quorum-consistency">Quorum Consistency</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+ 
+    </aside>
+    
+  </main>
+
+  
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

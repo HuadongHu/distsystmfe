@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en" dir=>
+
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="7. Chandy-Lamport快照(Snapshot)算法 #  分布式快照算法 #  在第一篇文章中我们谈到，如果系统某些节点出故障了，我们很有必要站在全局的角度去看系统的运行状态，这时我们就需要每个节点在这个时刻给系统拍个照片，记录下面每个节点的状态。这些照片的状态汇总在一起就可以得到全局状态。快照的主应用有故障恢复，死锁检测，垃圾回收等。
+上一篇文章末尾提到，“某一时刻“的表示不能用自然时钟，比如10:00中拍张快照，而是要用逻辑时钟。下面我们就介绍一个基于逻辑时钟的分布式快照算法Chandy-Lamport Snapshot。
+Chandy-Lamport Snapshot #  Chandy-Lamport算法是分布式系统的中的各个节点对状态进行快照，而不需要一个集中的协调方(Coordinater)去协调。
+Chandy-Lamport算法大致分为三个部分：快照发起，快照扩散，快照终止。
+快照发起 #  发起快照事件的进程：
+ 首先对自己的状态进行录制 通过Outgoing Channel（出进程的网络通道）发送Marker消息给其他进程。 当接收到Incoming Channel（进入进程的网络通道）的消息时，开始对接收到的消息进行录制  上述过程简单来说就是记录下自己的状态同时记录下接收到状态。
+下图的例子中，波浪线的位置是发送Marker消息，在发送之前，P1中的状态已经被录制（图中圈出的部分），同时开始记录从P2发送过来的状态。我们记做C21，Cij代表的是i-&gt;j的Channel的状态。
+快照扩散（Propagating） #  如果进程Pi是第一次见到一个从Cki Channel传递过来的marker，则
+ Pi录制下自己当前的状态 Pi将Cki Channel标记为空 Pi发送marker给其他Outgoing Channel Cij Pi开始记录出了Cki的所有的消息。  如果Pi已经接收过一个marker
+ Pi会停止录制其他进程过来的状态Cki, 这里用k表示其他的进程。同时按顺序将自从开始录制以来接收到的从进程k发送过来的消息记录到Cki中。  我们看一个例子。
+黄色的地方是P2第一次见到P1发送过来的marker, 所以P2先对自己的当前状态进行了录制(画圈的地方）。然后将C12标记成了空。
+然后P2将maker发送给P1，P1已经见过了这个maker（因为是P1发送的），所以在图中标绿的时刻，会停止录制，同时将自开始录制快照以来的所有接收的消息给记录到C21中。
+会不会发生下面的情况？
+我们要注意Chandy-Lamport算法一定是要在能保证FIFO交付的系统中才能正确运行，同时这个算法也是基于可靠网络传输的。
+我们再看一个更加复杂的例子：
+P1发起快照事件后，首先对自己的当前状态进行录制，同时将C21和C31设置为空。
+P1发送的marker先到到了P3。（为了防止波浪线看着太乱，下面的图我都用红色的线表示marker）
+P3接收到marker后，先对自己当前状态进行录制，设置C13, C23为空。同时发送marker到P1和P2。
+P2此时也是第一次见到这个marker，所以先对自己的当前状态进行录制，设置C12, C32为空，同时发送marker到P1， P3。
+P1不是第一次见到这个marker，于是停止录制，同时将自录制开始以来接收到的消息，H-&gt;D，写入C21。
+剩下的过程我不继续画了，图已经很乱了。这是因为如果有N个进程，那么一次录制，则需要发送N * (N-1)条消息。
+快照终止 #  如果一个进程再次见到marker消息时，保存好已经记录的自己的状态和其他Channel的状态，快照算法结束。">
+<meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="7. Chandy-Lamport快照(Snapshot)算法" />
+<meta property="og:description" content="7. Chandy-Lamport快照(Snapshot)算法 #  分布式快照算法 #  在第一篇文章中我们谈到，如果系统某些节点出故障了，我们很有必要站在全局的角度去看系统的运行状态，这时我们就需要每个节点在这个时刻给系统拍个照片，记录下面每个节点的状态。这些照片的状态汇总在一起就可以得到全局状态。快照的主应用有故障恢复，死锁检测，垃圾回收等。
+上一篇文章末尾提到，“某一时刻“的表示不能用自然时钟，比如10:00中拍张快照，而是要用逻辑时钟。下面我们就介绍一个基于逻辑时钟的分布式快照算法Chandy-Lamport Snapshot。
+Chandy-Lamport Snapshot #  Chandy-Lamport算法是分布式系统的中的各个节点对状态进行快照，而不需要一个集中的协调方(Coordinater)去协调。
+Chandy-Lamport算法大致分为三个部分：快照发起，快照扩散，快照终止。
+快照发起 #  发起快照事件的进程：
+ 首先对自己的状态进行录制 通过Outgoing Channel（出进程的网络通道）发送Marker消息给其他进程。 当接收到Incoming Channel（进入进程的网络通道）的消息时，开始对接收到的消息进行录制  上述过程简单来说就是记录下自己的状态同时记录下接收到状态。
+下图的例子中，波浪线的位置是发送Marker消息，在发送之前，P1中的状态已经被录制（图中圈出的部分），同时开始记录从P2发送过来的状态。我们记做C21，Cij代表的是i-&gt;j的Channel的状态。
+快照扩散（Propagating） #  如果进程Pi是第一次见到一个从Cki Channel传递过来的marker，则
+ Pi录制下自己当前的状态 Pi将Cki Channel标记为空 Pi发送marker给其他Outgoing Channel Cij Pi开始记录出了Cki的所有的消息。  如果Pi已经接收过一个marker
+ Pi会停止录制其他进程过来的状态Cki, 这里用k表示其他的进程。同时按顺序将自从开始录制以来接收到的从进程k发送过来的消息记录到Cki中。  我们看一个例子。
+黄色的地方是P2第一次见到P1发送过来的marker, 所以P2先对自己的当前状态进行了录制(画圈的地方）。然后将C12标记成了空。
+然后P2将maker发送给P1，P1已经见过了这个maker（因为是P1发送的），所以在图中标绿的时刻，会停止录制，同时将自开始录制快照以来的所有接收的消息给记录到C21中。
+会不会发生下面的情况？
+我们要注意Chandy-Lamport算法一定是要在能保证FIFO交付的系统中才能正确运行，同时这个算法也是基于可靠网络传输的。
+我们再看一个更加复杂的例子：
+P1发起快照事件后，首先对自己的当前状态进行录制，同时将C21和C31设置为空。
+P1发送的marker先到到了P3。（为了防止波浪线看着太乱，下面的图我都用红色的线表示marker）
+P3接收到marker后，先对自己当前状态进行录制，设置C13, C23为空。同时发送marker到P1和P2。
+P2此时也是第一次见到这个marker，所以先对自己的当前状态进行录制，设置C12, C32为空，同时发送marker到P1， P3。
+P1不是第一次见到这个marker，于是停止录制，同时将自录制开始以来接收到的消息，H-&gt;D，写入C21。
+剩下的过程我不继续画了，图已经很乱了。这是因为如果有N个进程，那么一次录制，则需要发送N * (N-1)条消息。
+快照终止 #  如果一个进程再次见到marker消息时，保存好已经记录的自己的状态和其他Channel的状态，快照算法结束。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://distsystms.huadonghu.com/docs/chandylamport-snapshot-algorithm/" />
+<meta property="article:published_time" content="2020-09-07T23:58:20-07:00" />
+<meta property="article:modified_time" content="2020-09-07T23:58:20-07:00" />
+<title>7. Chandy-Lamport快照(Snapshot)算法 | 分布式系统概述</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/favicon.png" type="image/x-icon">
+<link rel="stylesheet" href="/book.min.891c5b58a7a694942d519238f3c4138504c9ad2e207c0fd6541f9cd4f8d6220a.css" integrity="sha256-iRxbWKemlJQtUZI488QThQTJrS4gfA/WVB&#43;c1PjWIgo=">
+<script defer src="/en.search.min.a11bce14b45c5aff67fd7c1055386de7bc7645033a9f7998b8d0fab98cc3a8e7.js" integrity="sha256-oRvOFLRcWv9n/XwQVTht57x2RQM6n3mYuND6uYzDqOc="></script>
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-131378726-6', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+  
+</head>
+
+<body dir=>
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      
+  <nav>
+<h2 class="book-brand">
+  <a href="/"><span>分布式系统概述</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/case-study-amazons-dynamodb/" class="">14. Case study: Amazon&#39;s DynamoDB</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/eventual-consistency/" class="">13. 最终一致性(eventual consistency)，CAP理论</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/replications-and-consistency/" class="">11. 冗余备份(Replications)与一致性(Consistency)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/implementation-of-reliable-delivery/" class="">10. 实现可靠消息交付</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/reliable-delivery/" class="">9. 可靠消息交付</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/safety-liveness/" class="">8. Safety 和 Liveness</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/chandylamport-snapshot-algorithm/" class=" active">7. Chandy-Lamport快照(Snapshot)算法</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/consensus/" class="">12. 分布式共识算法</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/message-delivery/" class="">6. 消息交付(Message Delivery)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/raft/" class="">分布式共识算法-Raft</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/protocol-lamport-diagram/" class="">5. 网络协议(Protocol)与Lamport diagram</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/vector-clock/" class="">4. 向量时钟(Vector Clock)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/lamport-clocks/" class="">3. Lamport时钟(Lamport clocks)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/lamport-diagrams-happensbefore-partial-order/" class="">2. Lamport Diagrams，Happens-before，同步网络与异步网络，偏序关系</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/distributed-systems-what-and-why-time-and-clocks/" class="">1. 什么是和为什么分布式系统？时间和时钟。</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/paxos/" class="">分布式共识算法-Paxos</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var menu=document.querySelector("aside.book-menu nav");addEventListener("beforeunload",function(event){localStorage.setItem("menu.scrollTop",menu.scrollTop);});menu.scrollTop=localStorage.getItem("menu.scrollTop");})();</script>
+
+
+ 
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <strong>7. Chandy-Lamport快照(Snapshot)算法</strong>
+
+  <label for="toc-control">
+    
+    <img src="/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#分布式快照算法">分布式快照算法</a></li>
+    <li><a href="#chandy-lamport-snapshot">Chandy-Lamport Snapshot</a>
+      <ul>
+        <li><a href="#快照发起">快照发起</a></li>
+        <li><a href="#快照扩散propagating">快照扩散（<strong>Propagating）</strong></a></li>
+        <li><a href="#快照终止">快照终止</a></li>
+        <li><a href="#chandy-lamport正确性的前提假设">Chandy-Lamport正确性的前提假设</a></li>
+        <li><a href="#去中心化decentralized">去中心化(Decentralized)</a></li>
+        <li><a href="#快照的用途">快照的用途</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown"><h1 id="7-chandy-lamport快照snapshot算法">
+  7. Chandy-Lamport快照(Snapshot)算法
+  <a class="anchor" href="#7-chandy-lamport%e5%bf%ab%e7%85%a7snapshot%e7%ae%97%e6%b3%95">#</a>
+</h1>
+<h2 id="分布式快照算法">
+  分布式快照算法
+  <a class="anchor" href="#%e5%88%86%e5%b8%83%e5%bc%8f%e5%bf%ab%e7%85%a7%e7%ae%97%e6%b3%95">#</a>
+</h2>
+<p>在第一篇文章中我们谈到，如果系统某些节点出故障了，我们很有必要站在全局的角度去看系统的运行状态，这时我们就需要每个节点在这个时刻给系统拍个照片，记录下面每个节点的状态。这些照片的状态汇总在一起就可以得到全局状态。快照的主应用有故障恢复，死锁检测，垃圾回收等。</p>
+<p>上一篇文章末尾提到，“某一时刻“的表示不能用自然时钟，比如10:00中拍张快照，而是要用逻辑时钟。下面我们就介绍一个基于逻辑时钟的分布式快照算法Chandy-Lamport Snapshot。</p>
+<h2 id="chandy-lamport-snapshot">
+  Chandy-Lamport Snapshot
+  <a class="anchor" href="#chandy-lamport-snapshot">#</a>
+</h2>
+<p>Chandy-Lamport算法是分布式系统的中的各个节点对状态进行快照，而不需要一个集中的协调方(Coordinater)去协调。</p>
+<p>Chandy-Lamport算法大致分为三个部分：快照发起，快照扩散，快照终止。</p>
+<h3 id="快照发起">
+  快照发起
+  <a class="anchor" href="#%e5%bf%ab%e7%85%a7%e5%8f%91%e8%b5%b7">#</a>
+</h3>
+<p>发起快照事件的进程：</p>
+<ol>
+<li>首先对自己的状态进行录制</li>
+<li>通过Outgoing Channel（出进程的网络通道）发送Marker消息给其他进程。</li>
+<li>当接收到Incoming Channel（进入进程的网络通道）的消息时，开始对接收到的消息进行录制</li>
+</ol>
+<p>上述过程简单来说就是记录下自己的状态同时记录下接收到状态。</p>
+<p>下图的例子中，波浪线的位置是发送Marker消息，在发送之前，P1中的状态已经被录制（图中圈出的部分），同时开始记录从P2发送过来的状态。我们记做C21，Cij代表的是i-&gt;j的Channel的状态。</p>
+<p><img src="https://files.huadonghu.com/20200527/SBJtx4.png?x" alt="" /></p>
+<h3 id="快照扩散propagating">
+  快照扩散（<strong>Propagating）</strong>
+  <a class="anchor" href="#%e5%bf%ab%e7%85%a7%e6%89%a9%e6%95%a3propagating">#</a>
+</h3>
+<p>如果进程Pi是第一次见到一个从Cki Channel传递过来的marker，则</p>
+<ul>
+<li>Pi录制下自己当前的状态</li>
+<li>Pi将Cki Channel标记为空</li>
+<li>Pi发送marker给其他Outgoing Channel Cij</li>
+<li>Pi开始记录出了Cki的所有的消息。</li>
+</ul>
+<p>如果Pi已经接收过一个marker</p>
+<ul>
+<li>Pi会停止录制其他进程过来的状态Cki, 这里用k表示其他的进程。同时按顺序将自从开始录制以来接收到的从进程k发送过来的消息记录到Cki中。</li>
+</ul>
+<p>我们看一个例子。</p>
+<p><img src="https://files.huadonghu.com/20200527/geU4Qx.png" alt="" /></p>
+<p>黄色的地方是P2第一次见到P1发送过来的marker, 所以P2先对自己的当前状态进行了录制(画圈的地方）。然后将C12标记成了空。</p>
+<p><img src="https://files.huadonghu.com/20200527/pRP2aF.png" alt="" /></p>
+<p>然后P2将maker发送给P1，P1已经见过了这个maker（因为是P1发送的），所以在图中标绿的时刻，会停止录制，同时将自开始录制快照以来的所有接收的消息给记录到C21中。</p>
+<p>会不会发生下面的情况？</p>
+<p><img src="https://files.huadonghu.com/20200527/Xf17Wj.png" alt="" /></p>
+<p>我们要注意Chandy-Lamport算法一定是要在能保证FIFO交付的系统中才能正确运行，同时这个算法也是基于可靠网络传输的。</p>
+<p>我们再看一个更加复杂的例子：</p>
+<p><img src="https://files.huadonghu.com/20200527/PdhYOx.png" alt="" /></p>
+<p>P1发起快照事件后，首先对自己的当前状态进行录制，同时将C21和C31设置为空。</p>
+<p>P1发送的marker先到到了P3。（为了防止波浪线看着太乱，下面的图我都用红色的线表示marker）</p>
+<p><img src="https://files.huadonghu.com/20200527/s1edPD.png" alt="" /></p>
+<p>P3接收到marker后，先对自己当前状态进行录制，设置C13, C23为空。同时发送marker到P1和P2。</p>
+<p><img src="https://files.huadonghu.com/20200527/PeGx2d.png" alt="" /></p>
+<p>P2此时也是第一次见到这个marker，所以先对自己的当前状态进行录制，设置C12, C32为空，同时发送marker到P1， P3。</p>
+<p><img src="https://files.huadonghu.com/20200527/mTA21J.png" alt="" /></p>
+<p>P1不是第一次见到这个marker，于是停止录制，同时将自录制开始以来接收到的消息，H-&gt;D，写入C21。</p>
+<p>剩下的过程我不继续画了，图已经很乱了。这是因为如果有N个进程，那么一次录制，则需要发送N * (N-1)条消息。</p>
+<h3 id="快照终止">
+  快照终止
+  <a class="anchor" href="#%e5%bf%ab%e7%85%a7%e7%bb%88%e6%ad%a2">#</a>
+</h3>
+<p>如果一个进程再次见到marker消息时，保存好已经记录的自己的状态和其他Channel的状态，快照算法结束。</p>
+<p>Chandy-Lamport算法能保证算法一定会终止吗？答案是Yes，一个不严格的证明是，因为系统的传输是可靠的，所以每个进程都会见到同一条marker两次，然后结束快照。严格的证明感兴趣的同学可以阅读原论文。</p>
+<h3 id="chandy-lamport正确性的前提假设">
+  Chandy-Lamport正确性的前提假设
+  <a class="anchor" href="#chandy-lamport%e6%ad%a3%e7%a1%ae%e6%80%a7%e7%9a%84%e5%89%8d%e6%8f%90%e5%81%87%e8%ae%be">#</a>
+</h3>
+<p>Chandy-Lamport算法的正确性也是有前提的，我们前面其实已经提到过了：</p>
+<ol>
+<li>Channel是FIFO的</li>
+<li>消息的传输是可靠的（消息不会丢失，或者被污染）</li>
+<li>消息不会被重复错误发送</li>
+<li>算法运行过程中进程不会崩溃。</li>
+</ol>
+<p>上面的第4点也是Chandy-Lamport算法的一个局限性。</p>
+<h3 id="去中心化decentralized">
+  去中心化(Decentralized)
+  <a class="anchor" href="#%e5%8e%bb%e4%b8%ad%e5%bf%83%e5%8c%96decentralized">#</a>
+</h3>
+<p>中心化的算法往往会有一个节点发起协调，比如有一个节点专门发命令给其他节点通知他们拍快照，很明显，Chandy-Lamport算法去中心化的，任何一个节点都可以发起快照命令。</p>
+<p>那如果有两个进程或者多个进程同时发起快照请求，算法还能保证正确性吗？答案是Yes，你可以通过下面的例子验证下。感兴趣的同学可以读原论文的严格证明。</p>
+<p><img src="https://files.huadonghu.com/20200528/IpFxLf.png" alt="" /></p>
+<p>假设P1,P2在绿色的部分同时发起了快照请求，请你通过已经学到算法去验证下多个进程同时发起请求算法依旧是正确的。如果验证有问题，可以在评论区中指出。</p>
+<p>并不是所有的分布式算法都是去中心化的，我们后面还会学习到其他的中心化的和非中心的分布式算法。</p>
+<h3 id="快照的用途">
+  快照的用途
+  <a class="anchor" href="#%e5%bf%ab%e7%85%a7%e7%9a%84%e7%94%a8%e9%80%94">#</a>
+</h3>
+<p>用途1：CheckingPoint，检查点。第一篇文章中我们提到在高性能计算的场景下，如果系统有partial failure，往往会将整个系统重启。系统重启后可以加载最新的正确的快照恢复到重启前的状态。</p>
+<p>用途2：死锁检测。当发生死锁时，拿到全局的快照更容易检测出死锁发生的地方和原因。</p>
+<p>用途3：更加通用的说，快照可以进行静止状态(Stable Property)的检测，死锁是Stable Property的一个特例。当发生死锁后，死锁的状态就不会发生改变，所以称作静止状态。另外的一个例子就是可以用于检测分布式任务是否完成， 如果所有的节点都完成了任务，那么状态就会变成已完成不会再改变。</p>
+<p>割线(Cut)</p>
+<p>一个割线(Cut)是指在Lamport diagram中，将其分成过去(Past)和将来(future)两部分。一个时间如果在一个割里面，那意味着这个事件在过去的部分。</p>
+<p><img src="https://files.huadonghu.com/20200530/gDs87t.png?123" alt="" /></p>
+<p>一致性割线(Consistent Cut)</p>
+<p>一致性割线是指对于在一个割中的所有的事件E，F，如果F-&gt;E，那么F也在割中。</p>
+<p><img src="https://files.huadonghu.com/20200530/lwhBrf.png" alt="" /></p>
+<p>上图中，左边的割线是不一致的，因为F-&gt;E，但是F不在割中。右边的是一致性割。</p>
+<p>如果我们去验证一下Chandy-Lamport算法，会发现，所拍的快照是符合一致性割的。</p>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+
+
+
+</div>
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "distributed-system" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#分布式快照算法">分布式快照算法</a></li>
+    <li><a href="#chandy-lamport-snapshot">Chandy-Lamport Snapshot</a>
+      <ul>
+        <li><a href="#快照发起">快照发起</a></li>
+        <li><a href="#快照扩散propagating">快照扩散（<strong>Propagating）</strong></a></li>
+        <li><a href="#快照终止">快照终止</a></li>
+        <li><a href="#chandy-lamport正确性的前提假设">Chandy-Lamport正确性的前提假设</a></li>
+        <li><a href="#去中心化decentralized">去中心化(Decentralized)</a></li>
+        <li><a href="#快照的用途">快照的用途</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+ 
+    </aside>
+    
+  </main>
+
+  
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

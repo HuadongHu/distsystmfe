@@ -3,20 +3,100 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>http://example.org/</loc>
-    <priority>0</priority>
+    <loc>https://distsystms.huadonghu.com/docs/case-study-amazons-dynamodb/</loc>
+    <lastmod>2020-09-14T23:58:20-07:00</lastmod>
   </url>
   
   <url>
-    <loc>http://example.org/categories/</loc>
+    <loc>https://distsystms.huadonghu.com/</loc>
+    <lastmod>2020-09-14T23:58:20-07:00</lastmod>
   </url>
   
   <url>
-    <loc>http://example.org/tags/</loc>
+    <loc>https://distsystms.huadonghu.com/docs/eventual-consistency/</loc>
+    <lastmod>2020-09-13T23:58:20-07:00</lastmod>
   </url>
   
   <url>
-    <loc>http://example.org/</loc>
+    <loc>https://distsystms.huadonghu.com/docs/replications-and-consistency/</loc>
+    <lastmod>2020-09-11T23:58:20-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://distsystms.huadonghu.com/docs/implementation-of-reliable-delivery/</loc>
+    <lastmod>2020-09-10T23:58:20-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://distsystms.huadonghu.com/docs/reliable-delivery/</loc>
+    <lastmod>2020-09-09T23:58:20-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://distsystms.huadonghu.com/docs/safety-liveness/</loc>
+    <lastmod>2020-09-08T23:58:20-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://distsystms.huadonghu.com/docs/chandylamport-snapshot-algorithm/</loc>
+    <lastmod>2020-09-07T23:58:20-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://distsystms.huadonghu.com/docs/consensus/</loc>
+    <lastmod>2020-09-06T23:58:20-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://distsystms.huadonghu.com/docs/message-delivery/</loc>
+    <lastmod>2020-09-06T23:58:20-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://distsystms.huadonghu.com/docs/raft/</loc>
+    <lastmod>2020-09-06T23:58:20-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://distsystms.huadonghu.com/docs/protocol-lamport-diagram/</loc>
+    <lastmod>2020-09-05T23:58:20-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://distsystms.huadonghu.com/docs/vector-clock/</loc>
+    <lastmod>2020-09-04T23:58:20-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://distsystms.huadonghu.com/docs/lamport-clocks/</loc>
+    <lastmod>2020-09-03T23:58:20-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://distsystms.huadonghu.com/docs/</loc>
+    <lastmod>2020-09-03T23:58:20-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://distsystms.huadonghu.com/docs/lamport-diagrams-happensbefore-partial-order/</loc>
+    <lastmod>2020-09-02T23:58:20-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://distsystms.huadonghu.com/docs/distributed-systems-what-and-why-time-and-clocks/</loc>
+    <lastmod>2020-09-01T23:58:20-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://distsystms.huadonghu.com/categories/</loc>
+  </url>
+  
+  <url>
+    <loc>https://distsystms.huadonghu.com/tags/</loc>
+  </url>
+  
+  <url>
+    <loc>https://distsystms.huadonghu.com/docs/paxos/</loc>
   </url>
   
 </urlset>

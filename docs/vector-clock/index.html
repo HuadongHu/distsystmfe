@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en" dir=>
+
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="4. 向量时钟(Vector Clock) #  上一篇文章中我们知道，如果事件A happened before B，那么Lamport时钟LC(A) &lt; LC(B)，但是如果LC(A) &lt; LC(B)，我们并不能推断出A happens before B。
+这里介绍另外一种时钟，向量时钟(Vector Clock)。这个算法是Friedemann Mattern and Colin Fidge在1988年发表的。
+向量时钟特点是，如果事件A happened before B，那么A的向量时钟，记做VC(A) &lt; VC(B)，并且，如果VC(A) &lt; VC(B)，可以推断出事件A happened before B.
+通过对比Lamport时钟，我们发现Lamport时钟仅仅是遵循因果关系，而向量时钟可以描述因果关系。
+所谓的因果关系，并非逻辑上的因果关系，而是事件的发生顺序。
+Lamport时钟是用一个数字来表示，那向量时钟呢？从名字可以看出来是用一个向量，是一组描述事件顺序的数字。
+Step 1，每个进程初始化一个向量。每个向量的长度跟进程数相等。比如如果有A B C三个进程，则每个进程都初始化为[0, 0, 0]。
+如果我们不知道进程数呢？这的确是向量时钟算法的一个缺陷，也导致了向量时钟的运用范围会窄一些。
+如果某一时刻某个向量是[17, 0, 0]，含义是， A进程中发生了17次事件， B， C都为0。回顾下，Lamport时钟里是全局的计数器，而向量时钟是进程的局部计数器。
+Step 2，每个进程中，内部事件，消息发送，接收事件发生时，都将计数器&#43;1。
+如果A进程中又发生了一次事件，那么新的向量为[18, 0, 0]。这个和Lamport很相似。但关键是消息接收事件的处理，Lamport算法会将本地的计数器和网络携带过来的计数器取最大值，向量时钟该如何取最大值呢？
+Step 3，如果是消息发送事件，计数器&#43;1后将向量时钟携带着一起发送
+Step 4， 如果是消息接收事件，则对两个向量相同位置取最大值。这个比较方法叫做point wise。比如[1, 12, 4]，和[7, 0, 2]，其最大值向量就是[7, 12, 4]。
+在对上述算法进行演示前我们先思考一个问题，也就是VC(A) &lt; VC(B)，小于号这个操作符该如何定义？可能你已经猜到了，我们需要对两个向量里相同位置的值进行比较。
+VC(A) &lt; VC(B)当且仅当">
+<meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="4. 向量时钟(Vector Clock)" />
+<meta property="og:description" content="4. 向量时钟(Vector Clock) #  上一篇文章中我们知道，如果事件A happened before B，那么Lamport时钟LC(A) &lt; LC(B)，但是如果LC(A) &lt; LC(B)，我们并不能推断出A happens before B。
+这里介绍另外一种时钟，向量时钟(Vector Clock)。这个算法是Friedemann Mattern and Colin Fidge在1988年发表的。
+向量时钟特点是，如果事件A happened before B，那么A的向量时钟，记做VC(A) &lt; VC(B)，并且，如果VC(A) &lt; VC(B)，可以推断出事件A happened before B.
+通过对比Lamport时钟，我们发现Lamport时钟仅仅是遵循因果关系，而向量时钟可以描述因果关系。
+所谓的因果关系，并非逻辑上的因果关系，而是事件的发生顺序。
+Lamport时钟是用一个数字来表示，那向量时钟呢？从名字可以看出来是用一个向量，是一组描述事件顺序的数字。
+Step 1，每个进程初始化一个向量。每个向量的长度跟进程数相等。比如如果有A B C三个进程，则每个进程都初始化为[0, 0, 0]。
+如果我们不知道进程数呢？这的确是向量时钟算法的一个缺陷，也导致了向量时钟的运用范围会窄一些。
+如果某一时刻某个向量是[17, 0, 0]，含义是， A进程中发生了17次事件， B， C都为0。回顾下，Lamport时钟里是全局的计数器，而向量时钟是进程的局部计数器。
+Step 2，每个进程中，内部事件，消息发送，接收事件发生时，都将计数器&#43;1。
+如果A进程中又发生了一次事件，那么新的向量为[18, 0, 0]。这个和Lamport很相似。但关键是消息接收事件的处理，Lamport算法会将本地的计数器和网络携带过来的计数器取最大值，向量时钟该如何取最大值呢？
+Step 3，如果是消息发送事件，计数器&#43;1后将向量时钟携带着一起发送
+Step 4， 如果是消息接收事件，则对两个向量相同位置取最大值。这个比较方法叫做point wise。比如[1, 12, 4]，和[7, 0, 2]，其最大值向量就是[7, 12, 4]。
+在对上述算法进行演示前我们先思考一个问题，也就是VC(A) &lt; VC(B)，小于号这个操作符该如何定义？可能你已经猜到了，我们需要对两个向量里相同位置的值进行比较。
+VC(A) &lt; VC(B)当且仅当" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://distsystms.huadonghu.com/docs/vector-clock/" />
+<meta property="article:published_time" content="2020-09-04T23:58:20-07:00" />
+<meta property="article:modified_time" content="2020-09-04T23:58:20-07:00" />
+<title>4. 向量时钟(Vector Clock) | 分布式系统概述</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/favicon.png" type="image/x-icon">
+<link rel="stylesheet" href="/book.min.891c5b58a7a694942d519238f3c4138504c9ad2e207c0fd6541f9cd4f8d6220a.css" integrity="sha256-iRxbWKemlJQtUZI488QThQTJrS4gfA/WVB&#43;c1PjWIgo=">
+<script defer src="/en.search.min.a11bce14b45c5aff67fd7c1055386de7bc7645033a9f7998b8d0fab98cc3a8e7.js" integrity="sha256-oRvOFLRcWv9n/XwQVTht57x2RQM6n3mYuND6uYzDqOc="></script>
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-131378726-6', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+  
+</head>
+
+<body dir=>
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      
+  <nav>
+<h2 class="book-brand">
+  <a href="/"><span>分布式系统概述</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/case-study-amazons-dynamodb/" class="">14. Case study: Amazon&#39;s DynamoDB</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/eventual-consistency/" class="">13. 最终一致性(eventual consistency)，CAP理论</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/replications-and-consistency/" class="">11. 冗余备份(Replications)与一致性(Consistency)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/implementation-of-reliable-delivery/" class="">10. 实现可靠消息交付</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/reliable-delivery/" class="">9. 可靠消息交付</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/safety-liveness/" class="">8. Safety 和 Liveness</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/chandylamport-snapshot-algorithm/" class="">7. Chandy-Lamport快照(Snapshot)算法</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/consensus/" class="">12. 分布式共识算法</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/message-delivery/" class="">6. 消息交付(Message Delivery)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/raft/" class="">分布式共识算法-Raft</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/protocol-lamport-diagram/" class="">5. 网络协议(Protocol)与Lamport diagram</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/vector-clock/" class=" active">4. 向量时钟(Vector Clock)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/lamport-clocks/" class="">3. Lamport时钟(Lamport clocks)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/lamport-diagrams-happensbefore-partial-order/" class="">2. Lamport Diagrams，Happens-before，同步网络与异步网络，偏序关系</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/distributed-systems-what-and-why-time-and-clocks/" class="">1. 什么是和为什么分布式系统？时间和时钟。</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/paxos/" class="">分布式共识算法-Paxos</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var menu=document.querySelector("aside.book-menu nav");addEventListener("beforeunload",function(event){localStorage.setItem("menu.scrollTop",menu.scrollTop);});menu.scrollTop=localStorage.getItem("menu.scrollTop");})();</script>
+
+
+ 
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <strong>4. 向量时钟(Vector Clock)</strong>
+
+  <label for="toc-control">
+    
+    <img src="/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  <nav id="TableOfContents"></nav>
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown"><h1 id="4-向量时钟vector-clock">
+  4. 向量时钟(Vector Clock)
+  <a class="anchor" href="#4-%e5%90%91%e9%87%8f%e6%97%b6%e9%92%9fvector-clock">#</a>
+</h1>
+<p>上一篇文章中我们知道，如果事件A happened before B，那么Lamport时钟LC(A) &lt; LC(B)，但是如果LC(A) &lt; LC(B)，我们并不能推断出A happens before B。</p>
+<p>这里介绍另外一种时钟，向量时钟(Vector Clock)。这个算法是Friedemann Mattern and Colin Fidge在1988年发表的。</p>
+<p>向量时钟特点是，如果事件A happened before B，那么A的向量时钟，记做VC(A) &lt; VC(B)，并且，如果VC(A) &lt; VC(B)，可以推断出事件A happened before B.</p>
+<p>通过对比Lamport时钟，我们发现Lamport时钟仅仅是遵循因果关系，而向量时钟可以描述因果关系。</p>
+<p>所谓的因果关系，并非逻辑上的因果关系，而是事件的发生顺序。</p>
+<p>Lamport时钟是用一个数字来表示，那向量时钟呢？从名字可以看出来是用一个向量，是一组描述事件顺序的数字。</p>
+<p>Step 1，每个进程初始化一个向量。每个向量的长度跟进程数相等。比如如果有A B C三个进程，则每个进程都初始化为[0, 0, 0]。</p>
+<p>如果我们不知道进程数呢？这的确是向量时钟算法的一个缺陷，也导致了向量时钟的运用范围会窄一些。</p>
+<p>如果某一时刻某个向量是[17, 0, 0]，含义是， A进程中发生了17次事件， B， C都为0。回顾下，Lamport时钟里是全局的计数器，而向量时钟是进程的局部计数器。</p>
+<p>Step 2，每个进程中，内部事件，消息发送，接收事件发生时，都将计数器+1。</p>
+<p>如果A进程中又发生了一次事件，那么新的向量为[18, 0, 0]。这个和Lamport很相似。但关键是消息接收事件的处理，Lamport算法会将本地的计数器和网络携带过来的计数器取最大值，向量时钟该如何取最大值呢？</p>
+<p>Step 3，如果是消息发送事件，计数器+1后将向量时钟携带着一起发送</p>
+<p>Step 4， 如果是消息接收事件，则对两个向量相同位置取最大值。这个比较方法叫做point wise。比如[1, 12, 4]，和[7, 0, 2]，其最大值向量就是[7, 12, 4]。</p>
+<p>在对上述算法进行演示前我们先思考一个问题，也就是VC(A) &lt; VC(B)，小于号这个操作符该如何定义？可能你已经猜到了，我们需要对两个向量里相同位置的值进行比较。</p>
+<p>VC(A) &lt; VC(B)当且仅当</p>
+<ol>
+<li>VC(A)i &lt;=  VC(B)i，对于所有的i满足</li>
+<li>VC(A) 不等于 VC(B)</li>
+</ol>
+<p>下面的三个例子，哪些可以满足VC(A) &lt; VC(B)？</p>
+<ol>
+<li>VC(A) = [2, 2, 0]，VC(B) = [3, 2, 0]</li>
+<li>VC(A) = [2, 2, 0]，VC(B) = [1, 2, 3]</li>
+<li>VC(A) = [2, 2, 0]，VC(B) = [2, 2, 0]</li>
+</ol>
+<p>答案是仅仅第1个。第2个例子不满足条件1， 第3个例子不满足条件2。</p>
+<p>对于第二个例子，VC(A) = [2, 2, 0]，VC(B) = [1, 2, 3]，我们不能推断出VC(A) &lt; VC(B) 或者VC(B) &lt; VC(A)，这种状态我们称为他们是独立的或者并发的。我们之前提到过，A和B是不能推断出的A先于B发生或者B先于QA生， 那我们称这种关系叫做并发(Concurrent)。记作A || B。这种关系也叫做Q和R是独立的(Independent)，无依赖的。</p>
+<p>OK，我们开始来用一个例子演练下向量时钟算法。</p>
+<p><img src="https://files.huadonghu.com/20200523/9cr1k6.png" alt="" /></p>
+<p>我已经计算出了部分答案，你可以自己动手也算一下。</p>
+<p>答案如下</p>
+<p><img src="https://files.huadonghu.com/20200523/wCsA06.png?123" alt="" /></p>
+<p>我们之前提过，事件之间如果存在确定的先后关系，那么在视觉上可以用线给连起起来，验证工作就交给你完成了。</p>
+<p>我们看下下图中事件A和B，显然，他们是独立的，我们无法确定他们的先后关系，无论是数值上还是视觉上。</p>
+<p><img src="https://files.huadonghu.com/20200523/HESDXu.png" alt="" /></p>
+<p>向量时钟就先介绍到这里，后面会多次和向量时钟打交道。</p>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+
+
+
+</div>
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "distributed-system" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      
+  <nav id="TableOfContents"></nav>
+
+ 
+    </aside>
+    
+  </main>
+
+  
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

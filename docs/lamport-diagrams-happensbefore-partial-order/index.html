@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en" dir=>
+
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="2. Lamport Diagrams，Happens-before，同步网络与异步网络，偏序关系 #  Lamport Diagrams #  在上一小节中谈到了逻辑时钟来推理事件之间的关系，这一小节介绍Lamport Diagrams。
+这个图很简单，一眼就能看懂。图中的点表示事件。
+从上图得出以下三个推论，哪些是正确的，哪些是错误的？
+ X可能导致了Z Z可能导致了X X一定导致了Z  很显然，推论1是正确的，而2 3都是错的。
+我们再来研究下多台机器的情形。
+我们有m0, m1, m2三台机器，注意，这三台机器间没有共享内存(Shared Memory)，它们之间唯一的通信方式就是发送和接收消息。
+在m1中，事件X, Y, Z都是内部事件(Internal Events)，而P, S ,T, U, Q, R则是消息发送或者接收事件。
+Happens-before #  给定两个事件A,B，我们说A在B之前发生， A happens before B, 可记作: A -&gt; B, 只需要满足以下的条件之一即可：
+ A和B在同一个进程线里面而且B在A后面发生。 A是消息发送事件， B是与之对应的接收事件。 如果A-&gt;C, 且C-&gt;B。  上述的是解释了Happens-before, 但并不是具体的算法，具体的算法会在后面章节提到。
+同步网络和异步网络 #  比如alice，bob和carol在各自的进程中给其他人发送消息，如下图：
+Alice给BOB和Carol同时发送了&quot;Bob很蠢&quot;，BOB回应说“讨厌&quot;，结果Carol先接收到了&quot;讨厌&quot;。这个问题我们在上节做过描述，有可能是网络延时导致的。Carol此时很茫然，这种现象叫做causal anomaly。
+这里我更想介绍的是两种网络模型。
+第一个是同步网络(Synchronous Network Model)。如果我们知道Alice发送了消息后会多久到达Bob， Carol那里，那这样的bug就可以避免了。如果一个网络里面的消息都会通过一个固定的时间N送达(&lt;=N)，那这样的网络叫做同步网络。现实生活中，我们几乎使用的其实是异步网络。但是同步网络还是具有很高的科研价值。
+异步网络（Asynchronous Network Model), 与同步网络相反，并不存在一个N保证N时间内消息的送达。我们后面讨论的都是异步网络模型。">
+<meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="2. Lamport Diagrams，Happens-before，同步网络与异步网络，偏序关系" />
+<meta property="og:description" content="2. Lamport Diagrams，Happens-before，同步网络与异步网络，偏序关系 #  Lamport Diagrams #  在上一小节中谈到了逻辑时钟来推理事件之间的关系，这一小节介绍Lamport Diagrams。
+这个图很简单，一眼就能看懂。图中的点表示事件。
+从上图得出以下三个推论，哪些是正确的，哪些是错误的？
+ X可能导致了Z Z可能导致了X X一定导致了Z  很显然，推论1是正确的，而2 3都是错的。
+我们再来研究下多台机器的情形。
+我们有m0, m1, m2三台机器，注意，这三台机器间没有共享内存(Shared Memory)，它们之间唯一的通信方式就是发送和接收消息。
+在m1中，事件X, Y, Z都是内部事件(Internal Events)，而P, S ,T, U, Q, R则是消息发送或者接收事件。
+Happens-before #  给定两个事件A,B，我们说A在B之前发生， A happens before B, 可记作: A -&gt; B, 只需要满足以下的条件之一即可：
+ A和B在同一个进程线里面而且B在A后面发生。 A是消息发送事件， B是与之对应的接收事件。 如果A-&gt;C, 且C-&gt;B。  上述的是解释了Happens-before, 但并不是具体的算法，具体的算法会在后面章节提到。
+同步网络和异步网络 #  比如alice，bob和carol在各自的进程中给其他人发送消息，如下图：
+Alice给BOB和Carol同时发送了&quot;Bob很蠢&quot;，BOB回应说“讨厌&quot;，结果Carol先接收到了&quot;讨厌&quot;。这个问题我们在上节做过描述，有可能是网络延时导致的。Carol此时很茫然，这种现象叫做causal anomaly。
+这里我更想介绍的是两种网络模型。
+第一个是同步网络(Synchronous Network Model)。如果我们知道Alice发送了消息后会多久到达Bob， Carol那里，那这样的bug就可以避免了。如果一个网络里面的消息都会通过一个固定的时间N送达(&lt;=N)，那这样的网络叫做同步网络。现实生活中，我们几乎使用的其实是异步网络。但是同步网络还是具有很高的科研价值。
+异步网络（Asynchronous Network Model), 与同步网络相反，并不存在一个N保证N时间内消息的送达。我们后面讨论的都是异步网络模型。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://distsystms.huadonghu.com/docs/lamport-diagrams-happensbefore-partial-order/" />
+<meta property="article:published_time" content="2020-09-02T23:58:20-07:00" />
+<meta property="article:modified_time" content="2020-09-02T23:58:20-07:00" />
+<title>2. Lamport Diagrams，Happens-before，同步网络与异步网络，偏序关系 | 分布式系统概述</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/favicon.png" type="image/x-icon">
+<link rel="stylesheet" href="/book.min.891c5b58a7a694942d519238f3c4138504c9ad2e207c0fd6541f9cd4f8d6220a.css" integrity="sha256-iRxbWKemlJQtUZI488QThQTJrS4gfA/WVB&#43;c1PjWIgo=">
+<script defer src="/en.search.min.a11bce14b45c5aff67fd7c1055386de7bc7645033a9f7998b8d0fab98cc3a8e7.js" integrity="sha256-oRvOFLRcWv9n/XwQVTht57x2RQM6n3mYuND6uYzDqOc="></script>
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-131378726-6', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+  
+</head>
+
+<body dir=>
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      
+  <nav>
+<h2 class="book-brand">
+  <a href="/"><span>分布式系统概述</span>
+  </a>
+</h2>
+
+
+<div class="book-search">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/case-study-amazons-dynamodb/" class="">14. Case study: Amazon&#39;s DynamoDB</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/eventual-consistency/" class="">13. 最终一致性(eventual consistency)，CAP理论</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/replications-and-consistency/" class="">11. 冗余备份(Replications)与一致性(Consistency)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/implementation-of-reliable-delivery/" class="">10. 实现可靠消息交付</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/reliable-delivery/" class="">9. 可靠消息交付</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/safety-liveness/" class="">8. Safety 和 Liveness</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/chandylamport-snapshot-algorithm/" class="">7. Chandy-Lamport快照(Snapshot)算法</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/consensus/" class="">12. 分布式共识算法</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/message-delivery/" class="">6. 消息交付(Message Delivery)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/raft/" class="">分布式共识算法-Raft</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/protocol-lamport-diagram/" class="">5. 网络协议(Protocol)与Lamport diagram</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/vector-clock/" class="">4. 向量时钟(Vector Clock)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/lamport-clocks/" class="">3. Lamport时钟(Lamport clocks)</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/lamport-diagrams-happensbefore-partial-order/" class=" active">2. Lamport Diagrams，Happens-before，同步网络与异步网络，偏序关系</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/distributed-systems-what-and-why-time-and-clocks/" class="">1. 什么是和为什么分布式系统？时间和时钟。</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="https://distsystms.huadonghu.com/docs/paxos/" class="">分布式共识算法-Paxos</a>
+  
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var menu=document.querySelector("aside.book-menu nav");addEventListener("beforeunload",function(event){localStorage.setItem("menu.scrollTop",menu.scrollTop);});menu.scrollTop=localStorage.getItem("menu.scrollTop");})();</script>
+
+
+ 
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <strong>2. Lamport Diagrams，Happens-before，同步网络与异步网络，偏序关系</strong>
+
+  <label for="toc-control">
+    
+    <img src="/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#lamport-diagrams">Lamport Diagrams</a></li>
+    <li><a href="#happens-before">Happens-before</a></li>
+    <li><a href="#同步网络和异步网络">同步网络和异步网络</a></li>
+    <li><a href="#状态和事件state-and-events">状态和事件（state and events）</a></li>
+    <li><a href="#happens-before-回顾">Happens-before 回顾</a></li>
+    <li><a href="#偏序partial-order">偏序(Partial Order)</a></li>
+  </ul>
+</nav>
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown"><h1 id="2-lamport-diagramshappens-before同步网络与异步网络偏序关系">
+  2. Lamport Diagrams，Happens-before，同步网络与异步网络，偏序关系
+  <a class="anchor" href="#2-lamport-diagramshappens-before%e5%90%8c%e6%ad%a5%e7%bd%91%e7%bb%9c%e4%b8%8e%e5%bc%82%e6%ad%a5%e7%bd%91%e7%bb%9c%e5%81%8f%e5%ba%8f%e5%85%b3%e7%b3%bb">#</a>
+</h1>
+<h2 id="lamport-diagrams">
+  Lamport Diagrams
+  <a class="anchor" href="#lamport-diagrams">#</a>
+</h2>
+<p>在上一小节中谈到了逻辑时钟来推理事件之间的关系，这一小节介绍Lamport Diagrams。</p>
+<p>这个图很简单，一眼就能看懂。图中的点表示事件。</p>
+<p><img src="https://files.huadonghu.com/20200521/hwAaNR.png?1" alt="" /></p>
+<p>从上图得出以下三个推论，哪些是正确的，哪些是错误的？</p>
+<ol>
+<li>X可能导致了Z</li>
+<li>Z可能导致了X</li>
+<li>X一定导致了Z</li>
+</ol>
+<p>很显然，推论1是正确的，而2 3都是错的。</p>
+<p>我们再来研究下多台机器的情形。</p>
+<p><img src="https://files.huadonghu.com/20200521/Tkbwgl.png" alt="" /></p>
+<p>我们有m0, m1, m2三台机器，注意，这三台机器间没有共享内存(Shared Memory)，它们之间唯一的通信方式就是发送和接收消息。</p>
+<p>在m1中，事件X, Y, Z都是内部事件(Internal Events)，而P, S ,T, U, Q, R则是消息发送或者接收事件。</p>
+<h2 id="happens-before">
+  Happens-before
+  <a class="anchor" href="#happens-before">#</a>
+</h2>
+<p>给定两个事件A,B，我们说A在B之前发生， A happens before B, 可记作: A -&gt; B, 只需要满足以下的条件之一即可：</p>
+<ol>
+<li>A和B在同一个进程线里面而且B在A后面发生。</li>
+<li>A是消息发送事件， B是与之对应的接收事件。</li>
+<li>如果A-&gt;C, 且C-&gt;B。</li>
+</ol>
+<p>上述的是解释了Happens-before, 但并不是具体的算法，具体的算法会在后面章节提到。</p>
+<h2 id="同步网络和异步网络">
+  同步网络和异步网络
+  <a class="anchor" href="#%e5%90%8c%e6%ad%a5%e7%bd%91%e7%bb%9c%e5%92%8c%e5%bc%82%e6%ad%a5%e7%bd%91%e7%bb%9c">#</a>
+</h2>
+<p>比如alice，bob和carol在各自的进程中给其他人发送消息，如下图：</p>
+<p><img src="https://files.huadonghu.com/20200523/2mfV1W.png" alt="" /></p>
+<p>Alice给BOB和Carol同时发送了&quot;Bob很蠢&quot;，BOB回应说“讨厌&quot;，结果Carol先接收到了&quot;讨厌&quot;。这个问题我们在上节做过描述，有可能是网络延时导致的。Carol此时很茫然，这种现象叫做causal anomaly。</p>
+<p>这里我更想介绍的是两种网络模型。</p>
+<p>第一个是同步网络(Synchronous Network Model)。如果我们知道Alice发送了消息后会多久到达Bob， Carol那里，那这样的bug就可以避免了。如果一个网络里面的消息都会通过一个固定的时间N送达(&lt;=N)，那这样的网络叫做同步网络。现实生活中，我们几乎使用的其实是异步网络。但是同步网络还是具有很高的科研价值。</p>
+<p>异步网络（Asynchronous Network Model), 与同步网络相反，并不存在一个N保证N时间内消息的送达。我们后面讨论的都是异步网络模型。</p>
+<h2 id="状态和事件state-and-events">
+  状态和事件（state and events）
+  <a class="anchor" href="#%e7%8a%b6%e6%80%81%e5%92%8c%e4%ba%8b%e4%bb%b6state-and-events">#</a>
+</h2>
+<p>我们之前提到，Lamport Diagram中的一个点就是一个事件，</p>
+<p><img src="https://files.huadonghu.com/20200521/7IU6rx.png" alt="" /></p>
+<p>M1和M2之间的消息：M1询问M2 X是多少， M2回复x = 5。这些的确是一些事件，但同时也是状态。</p>
+<p>回忆下在计算机体系结构课程中，状态是指某一时刻的register之类的东西，这是指机器的状态。现实生活中，某一个时刻物体的属性也是状态。所以在Lamport Diagram图中的点既是事件，也是状态。</p>
+<p>M2此刻知道X是5，那之前一定有一些事件将X变成了5： 可能是一个事件直接把X设为5，也有可能有个事件将X设为1，然后又有4个事件把X递增到了5。一个状态其实是由一个或者多个事件导致的。</p>
+<p>所以， 如果我们回去把所有的事件给列出来，那我们可以计算出最终的状态。反过来可以么？我们知道了当前状态，能推算出之前的事件么？显然不行。</p>
+<h2 id="happens-before-回顾">
+  Happens-before 回顾
+  <a class="anchor" href="#happens-before-%e5%9b%9e%e9%a1%be">#</a>
+</h2>
+<p>上面我们提到，A Happens before B (A -&gt; B)， 当：</p>
+<ol>
+<li>A和B在同一个进程线里面而且B在A后面发生。</li>
+<li>A是消息发送事件， B是与之对应的接收事件。</li>
+<li>如果A-&gt;C, 且C-&gt;B。</li>
+</ol>
+<p>如果我们有两台机器，M1, M2:</p>
+<p><img src="https://files.huadonghu.com/20200521/QNi6Pv.png" alt="" /></p>
+<p>我们从上图可以推断,</p>
+<ol>
+<li>X-&gt;Y因为X是消息发送事件， Y是与之对应的接收事件。</li>
+<li>Y-&gt;Z, X-&gt;Q 因为在各自进程线里他们之间有先后关系</li>
+<li>因为X-&gt;Y, Y-&gt;Z，所以X -&gt; Z.</li>
+</ol>
+<p>上面的三种关系叫做最小关系 （Smallest relation)。</p>
+<p><img src="https://files.huadonghu.com/20200521/j2b6Gg.png" alt="" /></p>
+<p>这些最小关系的表示可以有: (A, B), (B, C), (A, C), (D, C)。你能解释下这四个最小关系分别用的哪个条件推断出的吗？</p>
+<p>(A， D)对么？</p>
+<p>(A, D)并不能通过最小关系推断出，尽管图中看起来可能A -&gt; D，</p>
+<p>再看下上面的一个例子：</p>
+<p><img src="https://files.huadonghu.com/20200521/Tkbwgl.png" alt="" /></p>
+<p>以下的几个时间的先后关系可以通过happens-before条件推断出吗？</p>
+<p>X和Z， P和Z， Q和R？</p>
+<p>Q和R是不能推断出的Q先于R发生或者R先于Q发生， 那我们称这种关系叫做并发(Concurrent)。记作Q || R。这种关系也叫做Q和R是独立的(Independent)，无依赖的。</p>
+<h2 id="偏序partial-order">
+  偏序(Partial Order)
+  <a class="anchor" href="#%e5%81%8f%e5%ba%8fpartial-order">#</a>
+</h2>
+<p>设R是集合A上的一个关系，如果R是</p>
+<ol>
+<li>自反的 (Reflexivity)</li>
+<li>反对称的 (Anti Symmetry)</li>
+<li>可传递的 (Transitivity)</li>
+</ol>
+<p>则称R是集合A的<strong>偏序</strong>关系，简称<strong>偏序</strong>，记作“≤”。</p>
+<p>对于Happens-before关系来说，很明显可以满足反对称性和传递性。但是不能说A比A发生的早，所以不存在自反性。但是我们可以说Happens-before是偏序的。</p>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+
+
+
+</div>
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "distributed-system" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#lamport-diagrams">Lamport Diagrams</a></li>
+    <li><a href="#happens-before">Happens-before</a></li>
+    <li><a href="#同步网络和异步网络">同步网络和异步网络</a></li>
+    <li><a href="#状态和事件state-and-events">状态和事件（state and events）</a></li>
+    <li><a href="#happens-before-回顾">Happens-before 回顾</a></li>
+    <li><a href="#偏序partial-order">偏序(Partial Order)</a></li>
+  </ul>
+</nav>
+
+ 
+    </aside>
+    
+  </main>
+
+  
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
