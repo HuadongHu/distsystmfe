@@ -3,12 +3,17 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>https://distsystms.huadonghu.com/docs/case-study-amazons-dynamodb/</loc>
-    <lastmod>2020-09-14T23:58:20-07:00</lastmod>
+    <loc>https://distsystms.huadonghu.com/docs/sharding/</loc>
+    <lastmod>2020-09-20T23:58:20-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://distsystms.huadonghu.com/docs/</loc>
+    <lastmod>2020-09-20T23:58:20-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://distsystms.huadonghu.com/docs/case-study-amazons-dynamodb/</loc>
     <lastmod>2020-09-14T23:58:20-07:00</lastmod>
   </url>
   

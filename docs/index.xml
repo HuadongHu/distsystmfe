@@ -6,7 +6,42 @@
     <description>Recent content in Docs on 分布式系统概述</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Mon, 14 Sep 2020 23:58:20 -0700</lastBuildDate><atom:link href="https://distsystms.huadonghu.com/docs/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sun, 20 Sep 2020 23:58:20 -0700</lastBuildDate><atom:link href="https://distsystms.huadonghu.com/docs/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>15. Sharding /Data Partitioning</title>
+      <link>https://distsystms.huadonghu.com/docs/sharding/</link>
+      <pubDate>Sun, 20 Sep 2020 23:58:20 -0700</pubDate>
+      
+      <guid>https://distsystms.huadonghu.com/docs/sharding/</guid>
+      <description>15. 数据分区(Sharding)与一致性哈希(Consistent Hashing) #  Sharding #  首先不要和网络分区(network partitions)搞混淆，网络分区是指网络中的一些节点无法与另外的一些节点通信，而数据分区则是将数据进行划分存放到不同的节点上。
+另外一个容易与之混淆的概念是数据的冗余备份(Replications)，备份是指将一份数据多次拷贝存放在不同的节点上。
+如果我们的数据大到一个节点无法存下的时候，就需要将数据分割，存放在不同的节点上。这样后面就会引入另外的一个指标，可拓展性(scalability)。
+比如说你现在使用的主备模式集群，那就意味着所有的读写操作都是由一个主节点承担，而客户端是不能直接和备份节点通信的。但是如果我们做一些修改呢？
+现在我们把数据分散个不同的机器上，所以所有的机器间是不需要保证一致的了，但是分割后的数据我们保存了三份，所以还是可以容错。
+我们再做些修改：
+这样的话，我们对数据做了分区，而每个分区又做了冗余备份，叫做备份组(Replica Groups)。
+这样做的一个好处是可以提高吞吐量(throughput)，这是很显然的，如果客户端需要XYZ的值，那么它就可以分别和存储了这些值的机器通信。
+但是我们的系统也可以设计下面的方式：
+现在我们有三台机器M1M2M3但是不同的在于，对于Key X我们存放在了M1和M2上面，同样的Y和Z也都备份在了不同的机器上。这样的话，如果有需要查询X，则可以和M1M2通信，同样，吞吐量可以提升。同时由于分区数据做了冗余备份，这样容错能力也得到了提升。不同机器间的相同key的数据需要保持一致，所以，机器间还是需要进行通信。如下图：
+上面的设计，每一个备份节点实际上也在充当一部分数据的主节点。比如M1是和Y的主节点。但是每一个节点又充当了备份节点的作用，比如M1是M2的Xkey的备份节点。每个节点都承担了2/3的数据存储和读取。这种方式就叫做分区(Sharding)。
+现实场景中的系统往往是既有冗余备份，也有数据分区。
+我们可以理解成比如X被备份在不同组的机器内，而这些组内进行了数据分区。但是为了简化问题，我们这里不讨论冗余备份的场景。所以后续的讨论还是基于简单的Sharding。
+一致性哈希(Consistent Hashing) #  Sharding的目标主要有两个：
+ 数据的均匀划分 客户端可以简单地获取数据  如果我们把数据随机均匀地放在不同的机器上，那么目标一很明显可以达到，目标二呢？因为数据是随机的分布，客户端就需要去每台机器上去询问查找，自然很不方便。
+另一种策略是对key做了hash，比如md5，后，假设我们有M1M2M3三台机器，那么hash后的key%3 == 0的放在M1上，ikey%3 == 1放在M2上，key%3 == 2放在M3上，这样的设计符合数据均匀分布，客户端只要对要查询的key进行哈希取摩后到对应的机器上去查找就行，也很简单。
+但是上面的方法问题在于，如果我们要增加一台机器呢？那样我们的客户端和服务端的策略都要进行修改。如果有机器突然崩溃了呢？
+在分布式系统中，我们需要处理这样的变化。比如说增加了一台M4，应该让M1-4的数据还是均匀，如果把所有数据重新分配，那样所需要移动的数据太多，效率很低下。
+我们需要的是将数据的移动尽可能少，还能使得所有的机器在有新机器加入后数据分布还很均匀。
+此处就需要用到一致性哈希算法。
+一致性哈希的基本思路为我们把所有的机器形成一个环，环上的空间的位置0 - 2^128-1。这里为了方便讨论，我们假设环的大小为0 - 63。
+我们的思路是在环上放置节点，每一个节点都可以对应到环上面的一个点，可能比如对节点的ip做了hash使得节点的分布是大致均匀的。
+此时我们需要把Apple添加进去，其hash结果为14，但是环上没有节点是14，那么久按照顺时针的方向找到最近的节点，M2，放置进去。如果有人想查询Apple呢？一样的，先找到14，发现没有节点，于是顺时针地往后找。
+如果想添加Aardvark，hash为62, 应该放在哪个节点上呢？M1。
+假设我们加入一个新的节点M5在60的位置。那么M1就是负责61-8，M2是9-20，M3是21-32，M4是33-47，M5 48-60。
+新节点的加入意味着需要从其他节点上转移一些数据过来，需要转移的数据是从48-60，这个范围的数据之前是存放在哪里的呢？M1。M1就需要把这些数据转移交给M5。但是M2 M3 M4是不需要做数据转移的。
+如果一个节点崩溃了呢？比如M2突然的崩溃了。哪一个节点应该开始接管M2（9-20）的数据？顺时针离其最近的是M3，所以M3需要接管这个范围内的所有的数据，但是M4 M5 M1是不受影响的。</description>
+    </item>
+    
     <item>
       <title>14. Case study: Amazon&#39;s DynamoDB</title>
       <link>https://distsystms.huadonghu.com/docs/case-study-amazons-dynamodb/</link>
